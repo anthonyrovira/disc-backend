@@ -1,6 +1,6 @@
 import { Controller, Get } from '@nestjs/common';
 import { AppService } from './app.service';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ApiOkResponse } from '@nestjs/swagger';
 
 @ApiTags('App')
@@ -8,8 +8,9 @@ import { ApiOkResponse } from '@nestjs/swagger';
 export class AppController {
   constructor(private readonly appService: AppService) {}
 
-  @Get()
+  @ApiOperation({ summary: 'Get Hello World' })
   @ApiOkResponse({ type: String })
+  @Get()
   getHello(): string {
     return this.appService.getHello();
   }

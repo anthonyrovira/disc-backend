@@ -10,4 +10,8 @@ export class UserService {
     this.users.push(newUser);
     return newUser;
   }
+
+  getUserById(id: string): User | undefined {
+    return this.users.find((user) => user.id === id);
+  }
 }
