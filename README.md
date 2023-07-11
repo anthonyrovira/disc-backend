@@ -1,30 +1,34 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="200" alt="Nest Logo" /></a>
-</p>
+# TODOs
+- [ ] Ajouter une base de données (SQL ou NoSQL ?)
+  - [ ] Table Users
+  - [ ] Table Questions
+  - [ ] Table Answers
+- [ ] Ajouter des services pour gérer la progression du questionnaire
+- [ ] Implémenter l'algorithmie pour compute le résultat final (DISC majoritaire ou système par points ?)
+- [ ] Commencer le frontend (React ? Next ? Astro ?)
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+-------
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+# D.I.S.C Personality Test
 
-## Description
+The DISC test is a method for analyzing the personality of candidates and employees in a company. It assesses their behavior, emotions, and adaptability to different environments and situations. The evaluation is based on four main aspects: Decision-making, Influence, Serenity, and Conformity.
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+The goal of this test is to provide a foundation for recruitment and selection processes, enabling a more thorough evaluation of individual performances. It helps improve internal communication, reduce conflicts, recognize employee skills, decrease turnover rates, and identify the talents that align with the company's objectives.
+
+By utilizing the DISC test, certains companies can effectively recruit candidates whose personalities are well-suited to their needs, thus creating a cohesive and complementary work team.
+
+## Technologies Used
+
+- NestJS: Framework for developing the backend API using Node.js
+
+## Clone Procedure
+
+1. Make sure you have [Node.js](https://nodejs.org) installed on your machine.
+2. Clone the project from the GitHub repository:
+
+```shell
+git clone [paste_repository_url_here]
+```
 
 ## Installation
 
@@ -58,16 +62,20 @@ $ pnpm run test:e2e
 $ pnpm run test:cov
 ```
 
-## Support
+## Contribution
+Contributions are welcome! If you'd like to contribute to this project, please follow these steps:
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+- Fork this repository and clone your fork to your machine.
+- Create a new branch for your feature or bug fix: ```git checkout -b my-branch```
+- Make your changes and commit them: ```git commit -m "My modification"```
+- Push your changes to your fork: ```git push origin my-branch```
+- Open a pull request from your fork to this repository. Please provide a minimal description of the benefit of your PR.
+- Wait for code review and approval before your contribution is merged.
 
 ## Stay in touch
 
-- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+For any questions or suggestions, feel free to contact me on Twitter: [@AnthonyRoviraJS](https://twitter.com/AnthonyRoviraJS)
 
 ## License
 
-Nest is [MIT licensed](LICENSE).
+Projet is [MIT licensed](licence).
