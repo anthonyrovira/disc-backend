@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { discData } from 'src/data/disc-data-fr';
+import { discData } from 'src/assets/disc-data-fr';
 import { Question } from 'src/models/data/question.model';
 
 @Injectable()
