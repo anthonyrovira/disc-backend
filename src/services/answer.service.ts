@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Answer } from '../models/data/answer.model';
+import { Answer } from '../dtos/data/answer.dto';
 
 @Injectable()
 export class AnswerService {
@@ -13,5 +13,13 @@ export class AnswerService {
     );
     this.answers.push(newAnswer);
     return newAnswer;
+  }
+
+  getAllAnswers(): Answer[] {
+    return this.answers;
+  }
+
+  getAnswerByQuestionId(questionId: string): Answer[] {
+    return this.answers.filter((answer) => answer.questionId === questionId);
   }
 }

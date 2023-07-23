@@ -5,8 +5,8 @@ import { AnswerController } from './controllers/answer.controller';
 import { UserService } from './services/user.service';
 import { QuestionService } from './services/question.service';
 import { AnswerService } from './services/answer.service';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
+import { AppController } from './controllers/app.controller';
+import { AppService } from './services/app.service';
 
 @Module({
   imports: [],

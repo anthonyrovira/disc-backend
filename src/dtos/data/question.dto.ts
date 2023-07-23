@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Option } from './option.model';
+import { Option } from './option.dto';
 
 export class Question {
   @ApiProperty({
@@ -20,6 +20,7 @@ export class Question {
     description: 'The options for the question',
   })
   options: Option[];
+
   constructor(data: any) {
     this.id = data.id;
     this.question = data.question;

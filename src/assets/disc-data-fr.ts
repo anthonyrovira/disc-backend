@@ -1,4 +1,4 @@
-import { Question } from 'src/models/data/question.model';
+import { Question } from 'src/dtos/data/question.dto';
 
 export const discData: Question[] = [
   {
@@ -369,7 +369,7 @@ export const discData: Question[] = [
     ],
   },
   {
-    id: 15,
+    id: 16,
     question: 'Votre gestion du temps :',
     options: [
       {
@@ -394,7 +394,7 @@ export const discData: Question[] = [
     ],
   },
   {
-    id: 15,
+    id: 17,
     question: 'Lorsque vous travaillez en équipe :',
     options: [
       {
@@ -420,7 +420,7 @@ export const discData: Question[] = [
     ],
   },
   {
-    id: 15,
+    id: 18,
     question: 'Dans une situation stressante :',
     options: [
       {

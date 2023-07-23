@@ -1,6 +1,6 @@
 import { Controller, Post, Body, Get, Param } from '@nestjs/common';
 import { UserService } from '../services/user.service';
-import { User } from 'src/models/data/user.model';
+import { User } from 'src/dtos/data/user.dto';
 import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('User')

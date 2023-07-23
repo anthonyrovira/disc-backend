@@ -1,6 +1,6 @@
 import { Controller, Post, Body } from '@nestjs/common';
 import { AnswerService } from '../services/answer.service';
-import { Answer } from '../models/data/answer.model';
+import { Answer } from '../dtos/data/answer.dto';
 import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('Answers')

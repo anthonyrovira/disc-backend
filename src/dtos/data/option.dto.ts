@@ -3,7 +3,7 @@ import { ApiProperty } from '@nestjs/swagger';
 export class Option {
   @ApiProperty({
     description: 'The unique identifier of the option',
-    example: '1',
+    example: 'a',
   })
   id: string;
 
