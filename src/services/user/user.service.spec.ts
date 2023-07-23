@@ -1,4 +1,4 @@
-import { User } from 'src/dtos/data/user.dto';
+import { User } from 'src/dtos/data/user/user.dto';
 import { UserService } from './user.service';
 
 describe('UserService', () => {

@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { discData } from 'src/assets/disc-data-fr';
-import { Question } from 'src/dtos/data/question.dto';
+import { Question } from 'src/dtos/data/question/question.dto';
 
 @Injectable()
 export class QuestionService {

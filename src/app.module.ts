@@ -1,12 +1,12 @@
 import { Module } from '@nestjs/common';
-import { UserController } from './controllers/user.controller';
-import { QuestionController } from './controllers/question.controller';
-import { AnswerController } from './controllers/answer.controller';
-import { UserService } from './services/user.service';
-import { QuestionService } from './services/question.service';
-import { AnswerService } from './services/answer.service';
-import { AppController } from './controllers/app.controller';
-import { AppService } from './services/app.service';
+import { AppController } from './controllers/app/app.controller';
+import { UserController } from './controllers/user/user.controller';
+import { QuestionController } from './controllers/question/question.controller';
+import { AnswerController } from './controllers/answer/answer.controller';
+import { AppService } from './services/app/app.service';
+import { UserService } from './services/user/user.service';
+import { QuestionService } from './services/question/question.service';
+import { AnswerService } from './services/answer/answer.service';
 
 @Module({
   imports: [],

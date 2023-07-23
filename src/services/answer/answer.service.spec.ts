@@ -1,5 +1,5 @@
+import { Answer } from 'src/dtos/data/answer/answer.dto';
 import { AnswerService } from './answer.service';
-import { Answer } from '../dtos/data/answer.dto';
 
 describe('AnswerService', () => {
   let service: AnswerService;

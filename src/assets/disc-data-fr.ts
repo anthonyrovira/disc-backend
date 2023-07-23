@@ -1,9 +1,9 @@
-import { Question } from 'src/dtos/data/question.dto';
+import { Question } from 'src/dtos/data/question/question.dto';
 
 export const discData: Question[] = [
   {
     id: 1,
-    question: 'Concernant votre poignée de main, vous êtes :',
+    question: 'Concernant votre poignée de main :',
     options: [
       {
         id: 'a',

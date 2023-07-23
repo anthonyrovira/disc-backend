@@ -1,6 +1,6 @@
 import { NotFoundException } from '@nestjs/common';
 import { QuestionService } from './question.service';
-import { Question } from 'src/dtos/data/question.dto';
+import { Question } from 'src/dtos/data/question/question.dto';
 
 describe('QuestionService', () => {
   let questionService: QuestionService;

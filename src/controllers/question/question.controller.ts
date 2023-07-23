@@ -1,7 +1,7 @@
 import { Controller, Get, Param } from '@nestjs/common';
-import { QuestionService } from '../services/question.service';
-import { Question } from 'src/dtos/data/question.dto';
 import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Question } from 'src/dtos/data/question/question.dto';
+import { QuestionService } from 'src/services/question/question.service';
 
 @ApiTags('Question')
 @Controller('questions')

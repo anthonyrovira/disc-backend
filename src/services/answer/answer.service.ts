@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Answer } from '../dtos/data/answer.dto';
+import { Answer } from 'src/dtos/data/answer/answer.dto';
 
 @Injectable()
 export class AnswerService {

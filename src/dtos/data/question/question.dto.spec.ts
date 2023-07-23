@@ -1,5 +1,5 @@
 import { Question } from './question.dto';
-import { Option } from './option.dto';
+import { Option } from '../option/option.dto';
 
 describe('Question DTO', () => {
   it('should create a new question instance', () => {
