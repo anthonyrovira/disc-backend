@@ -1,5 +1,6 @@
 # TODOs
-- [ ] Ajouter une base de données (SQL ou NoSQL ?)
+- [X] Ajouter une base de données (SQL ou NoSQL ?)
+  - [X] Table Auth
   - [ ] Table Users
   - [ ] Table Questions
   - [ ] Table Answers
