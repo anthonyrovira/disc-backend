@@ -23,6 +23,7 @@ lerna-debug.log*
 .project
 .vscode
 .classpath
+.env
 .c9/
 *.launch
 .settings/

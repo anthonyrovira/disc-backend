@@ -5,7 +5,7 @@ import { JwtGuard } from 'src/auth/guard';
 import { GetUser } from 'src/user/decorator';
 
 @UseGuards(JwtGuard)
-@ApiTags('User')
+@ApiTags('Users')
 @Controller('users')
 export class UserController {
   // constructor(private readonly userService: UserService) {}
