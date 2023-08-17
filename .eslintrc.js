@@ -4,6 +4,7 @@ module.exports = {
     project: 'tsconfig.json',
     tsconfigRootDir: __dirname,
     sourceType: 'module',
+    ecmaVersion: 'es2019',
   },
   plugins: ['@darraghor/nestjs-typed', '@typescript-eslint/eslint-plugin'],
   extends: [
@@ -11,12 +12,6 @@ module.exports = {
     'plugin:@typescript-eslint/recommended',
     // 'plugin:prettier/recommended',
   ],
-  parserOptions: {
-    project: ['./tsconfig.json'],
-    sourceType: 'module',
-    ecmaVersion: 'es2019',
-  },
-  parser: '@typescript-eslint/parser',
   root: true,
   env: {
     es6: true,
