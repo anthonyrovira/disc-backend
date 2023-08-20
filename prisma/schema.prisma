@@ -13,17 +13,41 @@ model User {
     email      String    @unique
     hash       String
     created_at DateTime? @default(now())
+    Form       Form[]
 }
 
 model Question {
-    id       Int      @id @default(autoincrement())
-    question String
-    options  Option[]
+    id      Int      @id @default(autoincrement())
+    content String
+    options Option[]
+    Answer  Answer[]
 }
 
 model Option {
-    id          String   @id @default(uuid())
-    content     String
-    Question    Question @relation(fields: [question_id], references: [id])
+    value      String   @unique
+    content    String
+    Question   Question @relation(fields: [questionId], references: [id])
+    questionId Int
+    Answer     Answer[]
+}
+
+model Form {
+    id         String    @id @default(uuid())
+    name       String    @default("disc_test")
+    User       User      @relation(fields: [user_id], references: [id])
+    user_id    String
+    answers    Answer[]
+    created_at DateTime? @default(now())
+    updated_at DateTime?
+}
+
+model Answer {
+    id          String    @id @default(cuid())
+    Option      Option    @relation(fields: [optionValue], references: [value])
+    optionValue String
+    Question    Question  @relation(fields: [question_id], references: [id])
     question_id Int
+    Form        Form      @relation(fields: [form_id], references: [id])
+    form_id     String
+    updated_at  DateTime? @default(now())
 }

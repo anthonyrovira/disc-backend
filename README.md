@@ -1,10 +1,28 @@
 # TODOs
-- [X] Ajouter une base de données (SQL ou NoSQL ?)
+- [X] Créér la base de données (sqlite)
   - [X] Table Auth
-  - [ ] Table Users
-  - [ ] Table Questions
-  - [ ] Table Answers
-- [ ] Ajouter des services pour gérer la progression du questionnaire
+  - [X] Table User
+  - [X] Table Question
+  - [X] Table Option
+  - [X] Table Answer
+  - [X] Table Form
+  - [X] Créer un script d'initialisation de la DB (fichier `initDB.ts` et `pnpm init:db` pour le déclencher)
+- [ ] Création des API
+  - [X] Auth
+    - [X] POST - signup
+    - [X] POST - signin
+  - [X] User
+    - [X] GET - getUserByAccessToken
+  - [X] Question
+    - [X] GET - getAllQuestions
+    - [X] GET - getQuestionById
+  - [X] Answer
+    - [X] POST - submitAnswer
+  - [X] Form
+    - [X] POST - initForm
+  - [ ] Result
+    - [ ] GET ou POST - getResult
+- [ ] Appliquer les pricinpes de clean architecture
 - [ ] Implémenter l'algorithmie pour compute le résultat final (DISC majoritaire ou système par points ?)
 - [ ] Commencer le frontend (React ? Next ? Astro ?)
 
