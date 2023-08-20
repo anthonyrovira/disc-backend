@@ -19,7 +19,7 @@ describe('UserController', () => {
       const userDto: UserDto = { id: '123', email: 'user@example.com' };
 
       // Act
-      const result = userController.getUserById(userDto);
+      const result = userController.getUserByAccessToken(userDto);
 
       // Assert
       expect(result).toBe(userDto);

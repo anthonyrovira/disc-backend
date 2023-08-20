@@ -2,12 +2,17 @@ import { Option } from './option.dto';
 
 describe('Option DTO', () => {
   it('should create a new option instance', () => {
-    const id = 'a';
-    const content = 'Option A';
+    const content = 'Red';
+    const value = '01_A';
 
-    const option = new Option({ id, text: content });
+    const data: Option = {
+      content: 'Red',
+      value: '01_A',
+    };
 
-    expect(option.id).toEqual(id);
-    expect(option.content).toEqual(content);
+    const optionDto = new Option(data);
+
+    expect(optionDto.content).toEqual(content);
+    expect(optionDto.value).toEqual(value);
   });
 });

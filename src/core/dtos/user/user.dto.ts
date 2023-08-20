@@ -26,7 +26,17 @@ export class UserDto {
   })
   created_at?: Date;
 
-  constructor(id: string, email: string, username?: string, created_at?: Date) {
+  constructor({
+    id,
+    email,
+    username,
+    created_at,
+  }: {
+    id: string;
+    email: string;
+    username?: string;
+    created_at?: Date;
+  }) {
     this.id = id;
     this.email = email;
     this.username = username;

@@ -5,7 +5,7 @@ import { JwtGuard } from 'src/auth/guard';
 import { GetUser } from 'src/user/decorator';
 
 @UseGuards(JwtGuard)
-@ApiTags('Users')
+@ApiTags('User')
 @Controller('users')
 export class UserController {
   // constructor(private readonly userService: UserService) {}
@@ -13,7 +13,7 @@ export class UserController {
   @ApiOperation({ summary: 'Get a user by id' })
   @ApiOkResponse({ type: UserDto })
   @Get('me')
-  getUserById(@GetUser('') user: UserDto) {
+  getUserByAccessToken(@GetUser('') user: UserDto) {
     return user;
   }
 }

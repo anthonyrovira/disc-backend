@@ -12,7 +12,6 @@ export class AuthController {
   @ApiOkResponse({ type: AuthResponseDto, description: 'JWT Token' })
   @Post('signup')
   async signUp(@Body() dto: AuthRequestDto) {
-    console.log({ dto });
     return this.authService.signUp(dto);
   }
 

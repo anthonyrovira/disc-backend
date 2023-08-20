@@ -2,10 +2,10 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class Option {
   @ApiProperty({
-    description: 'The unique identifier of the option',
-    example: 'a',
+    description: 'The value of the option',
+    example: '1A',
   })
-  id: string;
+  value: string;
 
   @ApiProperty({
     description: 'The content of the option',
@@ -13,15 +13,8 @@ export class Option {
   })
   content: string;
 
-  @ApiProperty({
-    description: 'The unique identifier of the question',
-    example: 10,
-  })
-  question_id: number;
-
-  constructor(data: any) {
-    this.id = data.id;
-    this.content = data.text;
-    this.question_id = data.question_id;
+  constructor({ value, content }: { value: string; content: string }) {
+    this.value = value;
+    this.content = content;
   }
 }

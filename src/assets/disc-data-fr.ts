@@ -6,25 +6,21 @@ export const discData: Question[] = [
     question: 'Concernant votre poignée de main :',
     options: [
       {
-        id: 'a',
+        value: '01_A',
         content: 'Elle est ferme et plutôt appuyée.',
-        question_id: 1,
       },
       {
-        id: 'b',
+        value: '01_B',
         content: 'Elle est rapide et plutôt chaleureuse.',
-        question_id: 1,
       },
       {
-        id: 'c',
+        value: '01_C',
         content: 'Elle est moyennement forte.',
-        question_id: 1,
       },
       {
-        id: 'd',
+        value: '01_D',
         content:
           "Elle est discrète et vous n'aimez pas forcément serrer la main.",
-        question_id: 1,
       },
     ],
   },
@@ -33,25 +29,21 @@ export const discData: Question[] = [
     question: 'Dans votre quotidien, vous aimez :',
     options: [
       {
-        id: 'a',
+        value: '02_A',
         content: "Relever les challenges et être tourné vers l'action.",
-        question_id: 2,
       },
       {
-        id: 'b',
+        value: '02_B',
         content: 'Être compréhensif et ne pas rentrer dans le conflit.',
-        question_id: 2,
       },
       {
-        id: 'c',
+        value: '02_C',
         content: 'Divertir et prendre plaisir avec les gens.',
-        question_id: 2,
       },
       {
-        id: 'd',
+        value: '02_D',
         content:
           'Être prudent, réfléchi et ne pas donner votre confiance facilement.',
-        question_id: 2,
       },
     ],
   },
@@ -60,26 +52,22 @@ export const discData: Question[] = [
     question: 'Quand vous vous exprimez, vous parlez plutôt :',
     options: [
       {
-        id: 'a',
+        value: '03_A',
         content:
           "Fort car il est important de se faire entendre et d'impacter.",
-        question_id: 3,
       },
       {
-        id: 'b',
+        value: '03_B',
         content:
           'Avec un très faible volume et lentement, vous aimez être discret.',
-        question_id: 3,
       },
       {
-        id: 'c',
+        value: '03_C',
         content: 'Avec de grandes variations vocales et un rythme très rapide.',
-        question_id: 3,
       },
       {
-        id: 'd',
+        value: '03_D',
         content: 'Avec un volume modéré et de manière calme, voir monocorde.',
-        question_id: 3,
       },
     ],
   },
@@ -88,24 +76,20 @@ export const discData: Question[] = [
     question: "C'est samedi, qu'avez-vous prévu :",
     options: [
       {
-        id: 'a',
+        value: '04_A',
         content: "Partir à l'aventure sans me préoccuper des autres.",
-        question_id: 4,
       },
       {
-        id: 'b',
+        value: '04_B',
         content: 'Organiser un barbecue avec des amis.',
-        question_id: 4,
       },
       {
-        id: 'c',
+        value: '04_C',
         content: "Ranger et mettre de l'ordre dans mes affaires.",
-        question_id: 4,
       },
       {
-        id: 'd',
+        value: '04_D',
         content: 'Aider une association locale et prendre mon temps.',
-        question_id: 4,
       },
     ],
   },
@@ -114,28 +98,24 @@ export const discData: Question[] = [
     question: 'Quand vous échangez avec les autres :',
     options: [
       {
-        id: 'a',
+        value: '05_A',
         content:
           "Vous parlez plus que vous n'écoutez et avez tendance à couper la parole et être affirmatif dans vos propos.",
-        question_id: 5,
       },
       {
-        id: 'b',
+        value: '05_B',
         content:
           "Vous avez une grande capacité d'écoute, ce qui est pour vous un signe de respect.",
-        question_id: 5,
       },
       {
-        id: 'c',
+        value: '05_C',
         content:
           'Vous adorez prendre part à une conversation. Discuter est essentiel pour vous, quel que soit le contenu.',
-        question_id: 5,
       },
       {
-        id: 'd',
+        value: '05_D',
         content:
           "Votre préférence va aux emails. Vous parlez peu et n'exprimez pas forcément vos sentiments.",
-        question_id: 5,
       },
     ],
   },
@@ -144,28 +124,24 @@ export const discData: Question[] = [
     question: 'Concernant le regard :',
     options: [
       {
-        id: 'a',
+        value: '06_A',
         content:
           'Vous regardez dans les yeux de manière soutenue en cherchant à évaluer votre interlocuteur.',
-        question_id: 6,
       },
       {
-        id: 'b',
+        value: '06_B',
         content:
           "Vous avez un regard amical et chaleureux et cherchez à éveiller l'intérêt.",
-        question_id: 6,
       },
       {
-        id: 'c',
+        value: '06_C',
         content:
           "Vous n'aimez pas qu'on vous regarde de manière fixe, vous détournez facilement le regard.",
-        question_id: 6,
       },
       {
-        id: 'd',
+        value: '06_D',
         content:
           'Vos contacts visuels sont rares, voire inexistants. Vous évitez le regard des autres.',
-        question_id: 6,
       },
     ],
   },
@@ -174,32 +150,24 @@ export const discData: Question[] = [
     question: 'Quelles sont les qualités que vous aimez :',
     options: [
       {
-        id: 'a',
+        value: '07_A',
         content:
           "Allez de l'avant, faire preuve de détermination, affronter les challenges.",
-
-        question_id: 7,
       },
       {
-        id: 'b',
+        value: '07_B',
         content:
           "Le sens de l'humour, la répartie, l'optimisme et l'enthousiasme.",
-
-        question_id: 7,
       },
       {
-        id: 'c',
+        value: '07_C',
         content:
           "Les règles, les procédures, la précision et la recherche de l'excellence.",
-
-        question_id: 7,
       },
       {
-        id: 'd',
+        value: '07_D',
         content:
           "Faire preuve d'empathie, être ouvert aux autres et comprendre leurs sentiments.",
-
-        question_id: 7,
       },
     ],
   },
@@ -208,26 +176,22 @@ export const discData: Question[] = [
     question: 'Vos principales peurs :',
     options: [
       {
-        id: 'a',
+        value: '08_A',
         content: "Que l'on tire avantage de vous.",
-        question_id: 8,
       },
       {
-        id: 'b',
+        value: '08_B',
         content:
           "Faire face à des changements soudains, à l'instabilité permanente.",
-        question_id: 8,
       },
       {
-        id: 'c',
+        value: '08_C',
         content:
           "Être critiqué pour votre travail, l'absence de qualité et de précision.",
-        question_id: 8,
       },
       {
-        id: 'd',
+        value: '08_D',
         content: "L'ignorance des autres, être délaissé.",
-        question_id: 8,
       },
     ],
   },
@@ -236,30 +200,22 @@ export const discData: Question[] = [
     question: 'Dans une réunion, vous êtes celui qui :',
     options: [
       {
-        id: 'a',
+        value: '09_A',
         content: 'Propose de nouvelles idées et est toujours de bonne humeur.',
-
-        question_id: 9,
       },
       {
-        id: 'b',
+        value: '09_B',
         content: 'Aime décider et imposer ses idées pour avancer.',
-
-        question_id: 9,
       },
       {
-        id: 'c',
+        value: '09_C',
         content:
           "Se conforme aux règles, procédures et suit scrupuleusement l'agenda de la réunion.",
-
-        question_id: 9,
       },
       {
-        id: 'd',
+        value: '09_D',
         content:
           "S'attache à la cohésion du groupe et aux sentiments des autres.",
-
-        question_id: 9,
       },
     ],
   },
@@ -268,28 +224,20 @@ export const discData: Question[] = [
     question: 'Au travail, vous êtes :',
     options: [
       {
-        id: 'a',
+        value: '10_A',
         content: 'Formel, rationnel, structuré et concret.',
-
-        question_id: 10,
       },
       {
-        id: 'b',
+        value: '10_B',
         content: 'Attentionné, pratique et altruiste.',
-
-        question_id: 10,
       },
       {
-        id: 'c',
+        value: '10_C',
         content: 'Interactif, social et amical.',
-
-        question_id: 10,
       },
       {
-        id: 'd',
+        value: '10_D',
         content: 'Efficace, rapide, structuré et occupé.',
-
-        question_id: 10,
       },
     ],
   },
@@ -298,32 +246,24 @@ export const discData: Question[] = [
     question: 'Parmi les métiers suivants, lequel choisiriez-vous :',
     options: [
       {
-        id: 'a',
+        value: '11_A',
         content:
           "Avocat, comptable, informaticien pour la précision et l'analyse.",
-
-        question_id: 11,
       },
       {
-        id: 'b',
+        value: '11_B',
         content:
           "Thérapeute, infirmier ou coach, pour le don de soi et l'écoute.",
-
-        question_id: 11,
       },
       {
-        id: 'c',
+        value: '11_C',
         content:
           'Sportif, entrepreneur, cadre dirigeant pour les challenges et la compétition.',
-
-        question_id: 11,
       },
       {
-        id: 'd',
+        value: '11_D',
         content:
           'Cadre commercial, publiciste, journaliste pour le relationnel et les interactions.',
-
-        question_id: 11,
       },
     ],
   },
@@ -332,31 +272,23 @@ export const discData: Question[] = [
     question: 'Concernant votre mode de réflexion :',
     options: [
       {
-        id: 'a',
+        value: '12_A',
         content:
           "Vous réfléchissez à voix haute et n'hésitez pas à exprimer vos ressentis.",
-
-        question_id: 12,
       },
       {
-        id: 'b',
+        value: '12_B',
         content:
           "Vous allez rapidement à l'essentiel et décidez vite avec un minimum d'informations.",
-
-        question_id: 12,
       },
       {
-        id: 'c',
+        value: '12_C',
         content: 'Votre réflexion est lente et profonde.',
-
-        question_id: 12,
       },
       {
-        id: 'd',
+        value: '12_D',
         content:
           'Vous aimez analyser les choses et rentrer dans les détails, ce qui peut vous paralyser dans votre prise de décision.',
-
-        question_id: 12,
       },
     ],
   },
@@ -365,31 +297,23 @@ export const discData: Question[] = [
     question: 'Au niveau de votre espace personnel :',
     options: [
       {
-        id: 'a',
+        value: '13_A',
         content: 'Même avec vos proches, vous gardez votre distance.',
-
-        question_id: 13,
       },
       {
-        id: 'b',
+        value: '13_B',
         content:
           "Vous occupez l'espace et n'hésitez pas à rentrer dans l'espace privé de votre interlocuteur.",
-
-        question_id: 13,
       },
       {
-        id: 'c',
+        value: '13_C',
         content:
           'Vous restez à distance et prenez uniquement vos aises quand une relation profonde vous lie à votre interlocuteur.',
-
-        question_id: 13,
       },
       {
-        id: 'd',
+        value: '13_D',
         content:
           'Vous êtes très rapidement tactile et familier avec votre interlocuteur, voire trop.',
-
-        question_id: 13,
       },
     ],
   },
@@ -398,32 +322,24 @@ export const discData: Question[] = [
     question: 'La structure de vos emails :',
     options: [
       {
-        id: 'a',
+        value: '14_A',
         content:
           "Au maximum 3 lignes, sans forcément de salutations. Ils sont courts et vont à l'essentiel.",
-
-        question_id: 14,
       },
       {
-        id: 'b',
+        value: '14_B',
         content:
           'Vous aimez personnaliser vos emails, y ajouter des anecdotes ou des expressions de sympathie.',
-
-        question_id: 14,
       },
       {
-        id: 'c',
+        value: '14_C',
         content:
           'Ils sont formels et structurés, respectant un certain formalisme.',
-
-        question_id: 14,
       },
       {
-        id: 'd',
+        value: '14_D',
         content:
           "Ils sont longs, détaillés et inclusifs, vous prenez le temps de vous exprimer et d'exprimer vos sentiments.",
-
-        question_id: 14,
       },
     ],
   },
@@ -432,31 +348,23 @@ export const discData: Question[] = [
     question: "Quand vous donnez votre opinion lors d'une conversation :",
     options: [
       {
-        id: 'a',
+        value: '15_A',
         content:
           "Vous n'hésitez pas à donner votre opinion directement et sans filtres.",
-
-        question_id: 15,
       },
       {
-        id: 'b',
+        value: '15_B',
         content: 'Vous êtes très spontané, voire trop de temps en temps.',
-
-        question_id: 15,
       },
       {
-        id: 'c',
+        value: '15_C',
         content:
           "Vous prenez le temps avant de répondre et vous exprimez plus en termes de données et de faits qu'en opinion générale.",
-
-        question_id: 15,
       },
       {
-        id: 'd',
+        value: '15_D',
         content:
           'Vous vérifiez que les personnes comprennent vos propos et faites attention à ne pas les froisser.',
-
-        question_id: 15,
       },
     ],
   },
@@ -465,31 +373,23 @@ export const discData: Question[] = [
     question: 'Votre gestion du temps :',
     options: [
       {
-        id: 'a',
+        value: '16_A',
         content:
           "Vous préférez tout faire vous-même et pensez que c'est plus rapide et efficace.",
-
-        question_id: 16,
       },
       {
-        id: 'b',
+        value: '16_B',
         content: 'Vous avez tendance à procrastiner et à repousser les tâches.',
-
-        question_id: 16,
       },
       {
-        id: 'c',
+        value: '16_C',
         content:
           'Vous suivez un agenda minutieux et planifiez chaque étape de votre journée.',
-
-        question_id: 16,
       },
       {
-        id: 'd',
+        value: '16_D',
         content:
           'Vous êtes très disponible pour les autres et avez du mal à dire non. Votre emploi du temps est flexible.',
-
-        question_id: 16,
       },
     ],
   },
@@ -498,32 +398,24 @@ export const discData: Question[] = [
     question: 'Lorsque vous travaillez en équipe :',
     options: [
       {
-        id: 'a',
+        value: '17_A',
         content:
           'Vous préférez être le leader et prendre les décisions importantes.',
-
-        question_id: 17,
       },
       {
-        id: 'b',
+        value: '17_B',
         content:
           "Vous aimez soutenir les autres membres de l'équipe et les aider à atteindre leurs objectifs.",
-
-        question_id: 17,
       },
       {
-        id: 'c',
+        value: '17_C',
         content:
           "Vous êtes attentif au respect des règles et des procédures dans le travail d'équipe.",
-
-        question_id: 17,
       },
       {
-        id: 'd',
+        value: '17_D',
         content:
           "Vous vous efforcez de maintenir une bonne ambiance et de favoriser la collaboration entre les membres de l'équipe.",
-
-        question_id: 17,
       },
     ],
   },
@@ -532,32 +424,24 @@ export const discData: Question[] = [
     question: 'Dans une situation stressante :',
     options: [
       {
-        id: 'a',
+        value: '18_A',
         content:
           'Vous gardez votre sang-froid et cherchez des solutions pratiques pour résoudre le problème.',
-
-        question_id: 18,
       },
       {
-        id: 'b',
+        value: '18_B',
         content:
           'Vous faites preuve de compassion envers les autres et cherchez à les soutenir émotionnellement.',
-
-        question_id: 18,
       },
       {
-        id: 'c',
+        value: '18_C',
         content:
           'Vous suivez les procédures établies et vous concentrez sur la réalisation des tâches nécessaires.',
-
-        question_id: 18,
       },
       {
-        id: 'd',
+        value: '18_D',
         content:
           'Vous cherchez à créer un environnement détendu et positif pour atténuer le stress.',
-
-        question_id: 18,
       },
     ],
   },

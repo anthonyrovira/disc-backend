@@ -2,12 +2,12 @@ import { UserDto } from './user.dto';
 
 describe('UserDto', () => {
   it('should create an instance', () => {
-    const userDto = new UserDto(
-      '123',
-      'user@example.com',
-      'JohnDoe51',
-      new Date('2023-07-01T10:00:00Z'),
-    );
+    const userDto = new UserDto({
+      id: '123',
+      email: 'user@example.com',
+      created_at: new Date('2023-07-01T10:00:00Z'),
+      username: 'JohnDoe51',
+    });
 
     expect(userDto).toBeDefined();
     expect(userDto.id).toBe('123');
@@ -17,7 +17,10 @@ describe('UserDto', () => {
   });
 
   it('should create an instance without optional properties', () => {
-    const userDto = new UserDto('123', 'user@example.com');
+    const userDto = new UserDto({
+      id: '123',
+      email: 'user@example.com',
+    });
 
     expect(userDto).toBeDefined();
     expect(userDto.id).toBe('123');
