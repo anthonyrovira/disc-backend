@@ -1,22 +1,24 @@
 import { NotFoundException } from '@nestjs/common';
-import { discData } from 'src/assets/disc-data-fr';
-import { Question } from 'src/core/dtos/question/question.dto';
+import { Question } from '@prisma/client';
+import { PrismaService } from 'src/framework/prisma/prisma.service';
 
 export class QuestionService {
-  private readonly questions: Question[] = discData;
+  constructor(private readonly prisma: PrismaService) {}
 
-  getAllQuestions(): Question[] {
-    return this.questions;
+  getAllQuestions(): Promise<Question[]> {
+    return this.prisma.question.findMany();
   }
 
-  getQuestionById(id: string): Question | undefined {
+  getQuestionById(id: string) {
     const questionId = parseInt(id, 10);
-    const question = this.questions.find(
-      (question) => question.id === questionId,
-    );
+    const question = this.prisma.question.findUnique({
+      where: { id: questionId },
+    });
+
     if (!question) {
       throw new NotFoundException(`Question with ID ${id} not found`);
     }
-    return this.questions.find((question) => question.id === questionId);
+
+    return question;
   }
 }

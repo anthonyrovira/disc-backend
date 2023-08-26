@@ -5,9 +5,10 @@ import {
   ApiOperation,
   ApiTags,
 } from '@nestjs/swagger';
-import { Question } from 'src/core/dtos/question/question.dto';
+import { Question as QuestionDto } from 'src/core/dtos/question/question.dto';
 import { QuestionService } from './question.service';
 import { JwtGuard } from 'src/auth/guard';
+import { Question } from '@prisma/client';
 
 @UseGuards(JwtGuard)
 @ApiTags('Question')
@@ -19,14 +20,14 @@ export class QuestionController {
   @ApiOperation({ summary: 'Get all questions' })
   @ApiOkResponse({ type: Array<Question> })
   @Get()
-  getAllQuestions(): Question[] {
+  getAllQuestions(): Promise<Question[]> {
     return this.questionService.getAllQuestions();
   }
 
   @ApiOperation({ summary: 'Get a question by id' })
-  @ApiOkResponse({ type: Question })
+  @ApiOkResponse({ type: QuestionDto })
   @Get(':id')
-  getQuestionById(@Param('id') id: string): Question | undefined {
+  getQuestionById(@Param('id') id: string) {
     return this.questionService.getQuestionById(id);
   }
 }
