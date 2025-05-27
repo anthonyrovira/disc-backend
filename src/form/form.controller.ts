@@ -17,6 +17,26 @@ import { InitFormDto } from 'src/core/dtos';
 export class FormController {
   constructor(private readonly formService: FormService) {}
 
+  // @ApiOperation({ summary: 'Get all forms' })
+  // @ApiOkResponse({
+  //   status: '2XX',
+  //   description: 'Form created successfully',
+  // })
+  // @Get()
+  // async getForms() {
+  //   return this.formService.getForms();
+  // }
+
+  // @ApiOperation({ summary: 'Get a form by id' })
+  // @ApiOkResponse({
+  //   status: '2XX',
+  //   description: 'Form created successfully',
+  // })
+  // @Get(':id')
+  // async getFormById(@Param('formId') formId: string) {
+  //   return this.formService.getFormById(formId);
+  // }
+
   @ApiOperation({ summary: 'Create and initialize a form' })
   @ApiOkResponse({
     status: '2XX',

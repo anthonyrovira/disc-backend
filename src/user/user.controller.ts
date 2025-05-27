@@ -1,16 +1,20 @@
 import { Controller, Get, UseGuards } from '@nestjs/common';
-import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+} from '@nestjs/swagger';
 import { UserDto } from 'src/core/dtos';
 import { JwtGuard } from 'src/auth/guard';
-import { GetUser } from 'src/user/decorator';
+import { GetUser } from './decorator';
 
 @UseGuards(JwtGuard)
 @ApiTags('User')
 @Controller('users')
 export class UserController {
-  // constructor(private readonly userService: UserService) {}
-
-  @ApiOperation({ summary: 'Get a user by id' })
+  @ApiBearerAuth('bearer')
+  @ApiOperation({ summary: 'Get the current user by its token' })
   @ApiOkResponse({ type: UserDto })
   @Get('me')
   getUserByAccessToken(@GetUser('') user: UserDto) {

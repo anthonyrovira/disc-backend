@@ -7,12 +7,12 @@ import { PrismaService } from 'src/framework/prisma/prisma.service';
 export class FormService {
   constructor(private prisma: PrismaService) {}
 
-  async initForm(dto: InitFormDto): Promise<Form> {
+  async initForm({ name, userId }: InitFormDto): Promise<Form> {
     try {
       return await this.prisma.form.create({
         data: {
-          name: dto.name,
-          user_id: dto.userId,
+          name: name,
+          user_id: userId,
           created_at: new Date(),
         },
       });

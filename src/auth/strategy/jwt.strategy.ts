@@ -1,6 +1,6 @@
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { PassportStrategy } from '@nestjs/passport';
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PrismaService } from 'src/framework/prisma/prisma.service';
 import { JwtPayloadDto, UserDto } from 'src/core/dtos';
 
@@ -21,6 +21,9 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
         email: email,
       },
     });
+    if (!user) {
+      throw new UnauthorizedException('Invalid connection');
+    }
 
     const userDto: UserDto = {
       id: user.id,

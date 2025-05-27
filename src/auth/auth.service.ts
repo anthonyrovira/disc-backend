@@ -23,7 +23,7 @@ export class AuthService {
       });
 
       // return jwt token
-      return this.signToken(user.id, user.email);
+      return this._signToken(user.id, user.email);
     } catch (error) {
       if (
         error instanceof Prisma.PrismaClientKnownRequestError &&
@@ -57,14 +57,17 @@ export class AuthService {
       }
 
       // return jwt token
-      return this.signToken(user.id, user.email);
+      return this._signToken(user.id, user.email);
     } catch (error) {
       // throw exception
       throw error;
     }
   }
 
-  async signToken(userId: string, email: string): Promise<AuthResponseDto> {
+  private async _signToken(
+    userId: string,
+    email: string,
+  ): Promise<AuthResponseDto> {
     const payload: JwtPayloadDto = {
       sub: userId,
       email,

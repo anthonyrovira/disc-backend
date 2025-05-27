@@ -6,7 +6,7 @@ import { PrismaService } from 'src/framework/prisma/prisma.service';
 export class UserService {
   constructor(private prisma: PrismaService) {}
 
-  async user(
+  async getUser(
     userWhereUniqueInput: Prisma.UserWhereUniqueInput,
   ): Promise<User | null> {
     return this.prisma.user.findUnique({
@@ -18,7 +18,7 @@ export class UserService {
     return this.prisma.user.findUnique({ where: { email } });
   }
 
-  async users(params: {
+  async getUsers(params: {
     skip?: number;
     take?: number;
     cursor?: Prisma.UserWhereUniqueInput;

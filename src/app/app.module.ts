@@ -13,9 +13,9 @@ import { AnswerModule } from 'src/answer/answer.module';
   imports: [
     ConfigModule.forRoot(),
     AuthModule,
+    UserModule,
     FormModule,
     AnswerModule,
-    UserModule,
     QuestionModule,
     PrismaModule,
   ],

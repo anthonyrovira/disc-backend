@@ -1,32 +1,33 @@
 # TODOs
-- [X] Créér la base de données (sqlite)
-  - [X] Table Auth
-  - [X] Table User
-  - [X] Table Question
-  - [X] Table Option
-  - [X] Table Answer
-  - [X] Table Form
-  - [X] Créer un script d'initialisation de la DB (fichier `initDB.ts` et `pnpm init:db` pour le déclencher)
+
+- [x] Créer la base de données (sqlite)
+  - [x] Table Auth
+  - [x] Table User
+  - [x] Table Question
+  - [x] Table Option
+  - [x] Table Answer
+  - [x] Table Form
+  - [x] Créer un script d'initialisation de la DB (fichier `initDB.ts` et `pnpm init:db` pour le déclencher)
 - [ ] Création des API
-  - [X] Auth
-    - [X] POST - signup
-    - [X] POST - signin
-  - [X] User
-    - [X] GET - getUserByAccessToken
-  - [X] Question
-    - [X] GET - getAllQuestions
-    - [X] GET - getQuestionById
-  - [X] Answer
-    - [X] POST - submitAnswer
-  - [X] Form
-    - [X] POST - initForm
+  - [x] Auth
+    - [x] POST - signup
+    - [x] POST - signin
+  - [x] User
+    - [x] GET - getUserByAccessToken
+  - [x] Question
+    - [x] GET - getAllQuestions
+    - [x] GET - getQuestionById
+  - [x] Answer
+    - [x] POST - submitAnswer
+  - [x] Form
+    - [x] POST - initForm
   - [ ] Result
     - [ ] GET ou POST - getResult
 - [ ] Appliquer les pricinpes de clean architecture
 - [ ] Implémenter l'algorithmie pour compute le résultat final (DISC majoritaire ou système par points ?)
 - [ ] Commencer le frontend (React ? Next ? Astro ?)
 
--------
+---
 
 # D.I.S.C Personality Test
 
@@ -82,12 +83,13 @@ $ pnpm run test:cov
 ```
 
 ## Contribution
+
 Contributions are welcome! If you'd like to contribute to this project, please follow these steps:
 
 - Fork this repository and clone your fork to your machine.
-- Create a new branch for your feature or bug fix: ```git checkout -b my-branch```
-- Make your changes and commit them: ```git commit -m "My modification"```
-- Push your changes to your fork: ```git push origin my-branch```
+- Create a new branch for your feature or bug fix: `git checkout -b my-branch`
+- Make your changes and commit them: `git commit -m "My modification"`
+- Push your changes to your fork: `git push origin my-branch`
 - Open a pull request from your fork to this repository. Please provide a minimal description of the benefit of your PR.
 - Wait for code review and approval before your contribution is merged.
 
