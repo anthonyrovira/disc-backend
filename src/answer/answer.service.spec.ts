@@ -48,47 +48,26 @@ describe('AnswerService', () => {
         id: 'form-id',
       };
 
-      const mockCreatedAnswer: { id: Answer['id'] } = {
-        id: 'answer-id',
-      };
-
       prismaService.form.findUnique = jest.fn().mockResolvedValue(mockForm);
-      prismaService.answer.create = jest
-        .fn()
-        .mockResolvedValue(mockCreatedAnswer);
+      prismaService.answer.create = jest.fn().mockResolvedValue(undefined);
 
       const result = await answerService.submitAnswer(mockDto);
 
-      expect(result).toBe('form updated with new answer');
+      expect(result).toBe('Answer submitted successfully');
       expect(prismaService.form.findUnique).toHaveBeenCalledWith({
         where: { id: mockDto.formId },
-        select: {
-          id: true,
-        },
+        select: { id: true },
       });
       expect(prismaService.answer.create).toHaveBeenCalledWith({
         data: {
           form_id: mockForm.id,
           question_id: mockDto.questionId,
-          updated_at: expect.any(Date),
           optionValue: mockDto.value,
-        },
-        select: {
-          id: true,
         },
       });
       expect(prismaService.form.update).toHaveBeenCalledWith({
         where: { id: mockDto.formId },
-        data: {
-          answers: {
-            upsert: {
-              where: { id: mockCreatedAnswer.id },
-              create: expect.any(Object),
-              update: expect.any(Object),
-            },
-          },
-          updated_at: expect.any(Date),
-        },
+        data: { updated_at: expect.any(Date) },
       });
     });
   });

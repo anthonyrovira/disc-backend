@@ -1,7 +1,8 @@
-import { NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { Question } from '@prisma/client';
 import { PrismaService } from '@/framework/prisma/prisma.service';
 
+@Injectable()
 export class QuestionService {
   constructor(private readonly prisma: PrismaService) {}
 
@@ -9,9 +10,9 @@ export class QuestionService {
     return this.prisma.question.findMany();
   }
 
-  getQuestionById(id: string) {
+  async getQuestionById(id: string) {
     const questionId = parseInt(id, 10);
-    const question = this.prisma.question.findUnique({
+    const question = await this.prisma.question.findUnique({
       where: { id: questionId },
     });
 

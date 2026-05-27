@@ -1,5 +1,5 @@
-import { Injectable } from '@nestjs/common';
-import { PrismaService } from '@/framework/prisma/prisma.service'; // Assurez-vous d'importer correctement votre service Prisma
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { PrismaService } from '@/framework/prisma/prisma.service';
 import { PostAnswerDto } from '../core/dtos';
 
 @Injectable()
@@ -7,54 +7,28 @@ export class AnswerService {
   constructor(private readonly prisma: PrismaService) {}
 
   async submitAnswer(dto: PostAnswerDto) {
-    const updateAtDate = new Date();
-    try {
-      const form = await this.prisma.form.findUnique({
-        where: { id: dto.formId },
-        select: {
-          id: true,
-        },
-      });
+    const form = await this.prisma.form.findUnique({
+      where: { id: dto.formId },
+      select: { id: true },
+    });
 
-      const createdAnswer = await this.prisma.answer.create({
-        data: {
-          form_id: form.id,
-          question_id: dto.questionId,
-          updated_at: updateAtDate,
-          optionValue: dto.value,
-        },
-        select: {
-          id: true,
-        },
-      });
-
-      await this.prisma.form.update({
-        where: { id: dto.formId },
-        data: {
-          answers: {
-            upsert: {
-              where: { id: createdAnswer.id },
-              create: {
-                id: createdAnswer.id,
-                question_id: dto.questionId,
-                updated_at: updateAtDate,
-                optionValue: dto.value,
-              },
-              update: {
-                id: createdAnswer.id,
-                question_id: dto.questionId,
-                updated_at: updateAtDate,
-                optionValue: dto.value,
-              },
-            },
-          },
-          updated_at: updateAtDate,
-        },
-      });
-
-      return 'form updated with new answer';
-    } catch (error) {
-      throw error;
+    if (!form) {
+      throw new NotFoundException(`Form with ID ${dto.formId} not found`);
     }
+
+    await this.prisma.answer.create({
+      data: {
+        form_id: form.id,
+        question_id: dto.questionId,
+        optionValue: dto.value,
+      },
+    });
+
+    await this.prisma.form.update({
+      where: { id: dto.formId },
+      data: { updated_at: new Date() },
+    });
+
+    return 'Answer submitted successfully';
   }
 }
