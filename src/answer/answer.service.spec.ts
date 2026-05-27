@@ -1,9 +1,9 @@
 // answer.service.spec.ts
 
 import { Answer, Form } from '@prisma/client';
-import { PostAnswerDto } from 'src/core/dtos';
+import { PostAnswerDto } from '@/core/dtos';
 import { AnswerService } from './answer.service';
-import { PrismaService } from 'src/framework/prisma/prisma.service';
+import { PrismaService } from '@/framework/prisma/prisma.service';
 import { Test, TestingModule } from '@nestjs/testing';
 
 describe('AnswerService', () => {

@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client';
-import { discData } from '../../src/assets/disc-data-fr';
+import { discData } from '@/assets/disc-data-fr';
 
 /**
  *  This script is used to initialize the Question table with data from discData.

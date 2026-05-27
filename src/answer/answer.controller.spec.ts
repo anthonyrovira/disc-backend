@@ -3,7 +3,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AnswerController } from './answer.controller';
 import { AnswerService } from './answer.service';
-import { PostAnswerDto } from 'src/core/dtos';
+import { PostAnswerDto } from '@/core/dtos';
 
 describe('AnswerController', () => {
   let controller: AnswerController;

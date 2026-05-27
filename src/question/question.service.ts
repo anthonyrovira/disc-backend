@@ -1,6 +1,6 @@
 import { NotFoundException } from '@nestjs/common';
 import { Question } from '@prisma/client';
-import { PrismaService } from 'src/framework/prisma/prisma.service';
+import { PrismaService } from '@/framework/prisma/prisma.service';
 
 export class QuestionService {
   constructor(private readonly prisma: PrismaService) {}

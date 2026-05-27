@@ -1,8 +1,8 @@
 import { Controller, Get, Param, UseGuards } from '@nestjs/common';
-import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { Question as QuestionDto } from 'src/core/dtos/question/question.dto';
+import { ApiResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Question as QuestionDto } from '@/core/dtos/question/question.dto';
 import { QuestionService } from './question.service';
-import { JwtGuard } from 'src/auth/guard';
+import { JwtGuard } from '@/auth/guard';
 import { Question } from '@prisma/client';
 
 @UseGuards(JwtGuard)
@@ -12,14 +12,14 @@ export class QuestionController {
   constructor(private readonly questionService: QuestionService) {}
 
   @ApiOperation({ summary: 'Get all questions' })
-  @ApiOkResponse({ type: Array<Question> })
+  @ApiResponse({ type: Array<Question> })
   @Get()
   getAllQuestions(): Promise<Question[]> {
     return this.questionService.getAllQuestions();
   }
 
   @ApiOperation({ summary: 'Get a question by id' })
-  @ApiOkResponse({ type: QuestionDto })
+  @ApiResponse({ type: QuestionDto })
   @Get(':id')
   getQuestionById(@Param('id') id: string) {
     return this.questionService.getQuestionById(id);

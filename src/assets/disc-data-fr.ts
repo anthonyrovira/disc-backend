@@ -1,4 +1,4 @@
-import { Question } from 'src/core/dtos';
+import { Question } from '@/core/dtos';
 
 export const discData: Question[] = [
   {

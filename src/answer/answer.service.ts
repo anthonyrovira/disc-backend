@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { PostAnswerDto } from 'src/core/dtos';
-import { PrismaService } from 'src/framework/prisma/prisma.service'; // Assurez-vous d'importer correctement votre service Prisma
+import { PrismaService } from '@/framework/prisma/prisma.service'; // Assurez-vous d'importer correctement votre service Prisma
+import { PostAnswerDto } from '../core/dtos';
 
 @Injectable()
 export class AnswerService {

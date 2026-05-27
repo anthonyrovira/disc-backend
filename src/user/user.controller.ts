@@ -1,12 +1,12 @@
 import { Controller, Get, UseGuards } from '@nestjs/common';
 import {
   ApiBearerAuth,
-  ApiOkResponse,
+  ApiResponse,
   ApiOperation,
   ApiTags,
 } from '@nestjs/swagger';
-import { UserDto } from 'src/core/dtos';
-import { JwtGuard } from 'src/auth/guard';
+import { UserDto } from '@/core/dtos';
+import { JwtGuard } from '@/auth/guard';
 import { GetUser } from './decorator';
 
 @UseGuards(JwtGuard)
@@ -15,7 +15,7 @@ import { GetUser } from './decorator';
 export class UserController {
   @ApiBearerAuth('bearer')
   @ApiOperation({ summary: 'Get the current user by its token' })
-  @ApiOkResponse({ type: UserDto })
+  @ApiResponse({ type: UserDto })
   @Get('me')
   getUserByAccessToken(@GetUser('') user: UserDto) {
     return user;

@@ -1,14 +1,14 @@
 import { Body, Controller, Post, UseGuards } from '@nestjs/common';
 import {
   ApiBearerAuth,
-  ApiOkResponse,
   ApiOperation,
+  ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import { JwtGuard } from 'src/auth/guard';
+import { JwtGuard } from '@/auth/guard';
 import { FormService } from './form.service';
 import { Form } from '@prisma/client';
-import { InitFormDto } from 'src/core/dtos';
+import { InitFormDto } from '@/core/dtos';
 
 @ApiTags('Form')
 @UseGuards(JwtGuard)
@@ -18,7 +18,7 @@ export class FormController {
   constructor(private readonly formService: FormService) {}
 
   // @ApiOperation({ summary: 'Get all forms' })
-  // @ApiOkResponse({
+  // @ApiResponse({
   //   status: '2XX',
   //   description: 'Form created successfully',
   // })
@@ -28,7 +28,7 @@ export class FormController {
   // }
 
   // @ApiOperation({ summary: 'Get a form by id' })
-  // @ApiOkResponse({
+  // @ApiResponse({
   //   status: '2XX',
   //   description: 'Form created successfully',
   // })
@@ -38,7 +38,7 @@ export class FormController {
   // }
 
   @ApiOperation({ summary: 'Create and initialize a form' })
-  @ApiOkResponse({
+  @ApiResponse({
     status: '2XX',
     description: 'Form created successfully',
   })

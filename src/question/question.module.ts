@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { QuestionService } from './question.service';
-import { QuestionController } from 'src/question/question.controller';
+import { QuestionController } from '@/question/question.controller';
 
 @Module({
   controllers: [QuestionController],

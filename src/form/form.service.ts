@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Form } from '@prisma/client';
-import { InitFormDto } from 'src/core/dtos';
-import { PrismaService } from 'src/framework/prisma/prisma.service';
+import { InitFormDto } from '@/core/dtos';
+import { PrismaService } from '@/framework/prisma/prisma.service';
 
 @Injectable()
 export class FormService {

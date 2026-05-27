@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
-import { UserController } from 'src/user/user.controller';
+import { UserController } from '@/user/user.controller';
 import { UserService } from './user.service';
-import { JwtGuard } from 'src/auth/guard';
+import { JwtGuard } from '@/auth/guard';
 
 @Module({
   controllers: [UserController],

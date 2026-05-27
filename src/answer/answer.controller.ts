@@ -8,13 +8,13 @@ import {
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
-  ApiOkResponse,
+  ApiResponse,
   ApiOperation,
   ApiTags,
 } from '@nestjs/swagger';
 import { AnswerService } from './answer.service';
-import { JwtGuard } from 'src/auth/guard';
-import { PostAnswerDto } from 'src/core/dtos';
+import { JwtGuard } from '@/auth/guard';
+import { PostAnswerDto } from '@/core/dtos';
 
 @ApiTags('Answer')
 @Controller('answer')
@@ -24,7 +24,7 @@ export class AnswerController {
   constructor(private readonly answerService: AnswerService) {}
 
   @ApiOperation({ summary: 'Submit an answer' })
-  @ApiOkResponse({
+  @ApiResponse({
     status: '2XX',
     description: 'Answer submitted successfully',
   })
