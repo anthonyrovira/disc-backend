@@ -3,14 +3,6 @@ import { IsNotEmpty, IsString } from 'class-validator';
 
 export class InitFormDto {
   @ApiProperty({
-    description: 'The user id',
-    example: 'xxxxxx-xxxx-xxxx-xxxx-xxxxxxxx',
-  })
-  @IsString()
-  @IsNotEmpty()
-  userId: string;
-
-  @ApiProperty({
     description: 'The form name',
     example: 'super_test',
   })
@@ -18,8 +10,7 @@ export class InitFormDto {
   @IsNotEmpty()
   name: string;
 
-  constructor({ userId, name }: { userId: string; name: string }) {
-    this.userId = userId;
+  constructor({ name }: { name: string }) {
     this.name = name;
   }
 }

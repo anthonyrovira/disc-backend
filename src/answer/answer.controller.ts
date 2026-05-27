@@ -1,11 +1,4 @@
-import {
-  Body,
-  Controller,
-  HttpCode,
-  HttpStatus,
-  Post,
-  UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, Post, UseGuards } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiResponse,
@@ -25,12 +18,11 @@ export class AnswerController {
 
   @ApiOperation({ summary: 'Submit an answer' })
   @ApiResponse({
-    status: '2XX',
+    status: 201,
     description: 'Answer submitted successfully',
   })
-  @HttpCode(HttpStatus.NO_CONTENT)
   @Post()
-  async submitAnswer(@Body() dto: PostAnswerDto): Promise<string> {
+  async submitAnswer(@Body() dto: PostAnswerDto) {
     return this.answerService.submitAnswer(dto);
   }
 }

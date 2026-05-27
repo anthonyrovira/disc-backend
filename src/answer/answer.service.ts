@@ -16,7 +16,7 @@ export class AnswerService {
       throw new NotFoundException(`Form with ID ${dto.formId} not found`);
     }
 
-    await this.prisma.answer.create({
+    const answer = await this.prisma.answer.create({
       data: {
         form_id: form.id,
         question_id: dto.questionId,
@@ -29,6 +29,6 @@ export class AnswerService {
       data: { updated_at: new Date() },
     });
 
-    return 'Answer submitted successfully';
+    return { id: answer.id };
   }
 }

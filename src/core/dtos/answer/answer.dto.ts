@@ -3,14 +3,6 @@ import { IsInt, IsNotEmpty, IsString } from 'class-validator';
 
 export class PostAnswerDto {
   @ApiProperty({
-    description: 'The user id',
-    example: 'xxxxxx-xxxx-xxxx-xxxx-xxxxxxxx',
-  })
-  @IsString()
-  @IsNotEmpty()
-  userId: string;
-
-  @ApiProperty({
     description: 'The form id',
     example: 'xxxxxx-xxxx-xxxx-xxxx-xxxxxxxx',
   })
@@ -35,17 +27,14 @@ export class PostAnswerDto {
   value: string;
 
   constructor({
-    userId,
     formId,
     questionId,
     value,
   }: {
-    userId: string;
     formId: string;
     questionId: number;
     value: string;
   }) {
-    this.userId = userId;
     this.formId = formId;
     this.questionId = questionId;
     this.value = value;

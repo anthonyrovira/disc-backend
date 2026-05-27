@@ -28,17 +28,15 @@ describe('FormService', () => {
   });
 
   it('should create a new form', async () => {
-    const dto = {
-      name: 'Test Form',
-      userId: '1234',
-    };
+    const name = 'Test Form';
+    const userId = '1234';
 
-    await service.initForm(dto);
+    await service.initForm(name, userId);
 
     expect(prisma.form.create).toHaveBeenCalledWith({
       data: {
-        name: dto.name,
-        user_id: dto.userId,
+        name,
+        user_id: userId,
         created_at: expect.any(Date),
       },
     });

@@ -1,23 +1,33 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { Form } from '@prisma/client';
-import { InitFormDto } from '@/core/dtos';
 import { PrismaService } from '@/framework/prisma/prisma.service';
 
 @Injectable()
 export class FormService {
   constructor(private prisma: PrismaService) {}
 
-  async initForm({ name, userId }: InitFormDto): Promise<Form> {
-    try {
-      return await this.prisma.form.create({
-        data: {
-          name: name,
-          user_id: userId,
-          created_at: new Date(),
-        },
-      });
-    } catch (error) {
-      throw error;
+  async getForms(userId: string): Promise<Form[]> {
+    return this.prisma.form.findMany({
+      where: { user_id: userId },
+      orderBy: { created_at: 'desc' },
+    });
+  }
+
+  async getFormById(id: string): Promise<Form> {
+    const form = await this.prisma.form.findUnique({ where: { id } });
+    if (!form) {
+      throw new NotFoundException(`Form with ID ${id} not found`);
     }
+    return form;
+  }
+
+  async initForm(name: string, userId: string): Promise<Form> {
+    return this.prisma.form.create({
+      data: {
+        name,
+        user_id: userId,
+        created_at: new Date(),
+      },
+    });
   }
 }

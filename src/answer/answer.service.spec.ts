@@ -39,7 +39,6 @@ describe('AnswerService', () => {
     it('should submit and update answer', async () => {
       const mockDto: PostAnswerDto = {
         formId: 'form-id',
-        userId: 'user-id',
         questionId: 10,
         value: 'option-value',
       };
@@ -48,12 +47,16 @@ describe('AnswerService', () => {
         id: 'form-id',
       };
 
+      const mockAnswer: { id: Answer['id'] } = {
+        id: 'answer-id',
+      };
+
       prismaService.form.findUnique = jest.fn().mockResolvedValue(mockForm);
-      prismaService.answer.create = jest.fn().mockResolvedValue(undefined);
+      prismaService.answer.create = jest.fn().mockResolvedValue(mockAnswer);
 
       const result = await answerService.submitAnswer(mockDto);
 
-      expect(result).toBe('Answer submitted successfully');
+      expect(result).toEqual({ id: 'answer-id' });
       expect(prismaService.form.findUnique).toHaveBeenCalledWith({
         where: { id: mockDto.formId },
         select: { id: true },

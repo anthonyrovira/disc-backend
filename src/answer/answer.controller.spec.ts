@@ -28,7 +28,6 @@ describe('AnswerController', () => {
 
   const mockDto: PostAnswerDto = {
     formId: 'form-id',
-    userId: 'user-id',
     questionId: 10,
     value: 'option-value',
   };
@@ -39,13 +38,13 @@ describe('AnswerController', () => {
     expect(service.submitAnswer).toHaveBeenCalledWith(mockDto);
   });
 
-  it('should return success message', async () => {
+  it('should return answer id', async () => {
     jest
       .spyOn(service, 'submitAnswer')
-      .mockResolvedValue('form updated with new answer');
+      .mockResolvedValue({ id: 'answer-id' });
 
     const result = await controller.submitAnswer(mockDto);
 
-    expect(result).toEqual('form updated with new answer');
+    expect(result).toEqual({ id: 'answer-id' });
   });
 });

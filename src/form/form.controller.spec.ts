@@ -27,13 +27,11 @@ describe('FormController', () => {
   });
 
   it('should call initForm method', async () => {
-    const dto: InitFormDto = {
-      name: 'Test Form',
-      userId: '123',
-    };
+    const dto: InitFormDto = { name: 'Test Form' };
+    const mockUser = { id: 'user-id', email: 'test@test.com' };
 
-    await controller.initForm(dto);
+    await controller.initForm(dto, mockUser as any);
 
-    expect(service.initForm).toHaveBeenCalledWith(dto);
+    expect(service.initForm).toHaveBeenCalledWith('Test Form', 'user-id');
   });
 });
