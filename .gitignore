@@ -40,3 +40,6 @@ lerna-debug.log*
 /playwright/.cache/
 
 /generated/prisma
+/prisma/.seed-sources
+
+AGENTS.md
