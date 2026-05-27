@@ -1,5 +1,3 @@
-// answer.service.spec.ts
-
 import { Answer, Form } from '@prisma/client';
 import { PostAnswerDto } from '@/core/dtos';
 import { AnswerService } from './answer.service';

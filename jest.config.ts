@@ -1,19 +1,26 @@
-module.exports = {
+import type { Config } from 'jest';
+
+const config: Config = {
   moduleFileExtensions: ['js', 'json', 'ts'],
   rootDir: '.',
+  testRegex: '.*\\.spec\\.ts$',
   transform: {
-    '^.+\\.tsx?$': 'ts-jest',
-    '^.+\\.jsx?$': 'babel-jest',
+    '^.+\\.(t|j)s$': [
+      'ts-jest',
+      {
+        useESM: true,
+        tsconfig: 'tsconfig.spec.json',
+        diagnostics: {
+          ignoreCodes: [151002],
+        },
+      },
+    ],
   },
+  extensionsToTreatAsEsm: ['.ts'],
   moduleNameMapper: {
-    '^src/(.*)$': '<rootDir>/src/$1',
-    '^app/(.*)$': '<rootDir>/src/app/$1',
-    '^assets/(.*)$': '<rootDir>/src/assets/$1',
-    '^auth/(.*)$': '<rootDir>/src/auth/$1',
-    '^core/(.*)$': '<rootDir>/src/core/$1',
-    '^framework/(.*)$': '<rootDir>/src/framework/$1',
-    '^question/(.*)$': '<rootDir>/src/question/$1',
-    '^user/(.*)$': '<rootDir>/src/user/$1',
-    '^utils/(.*)$': '<rootDir>/src/utils/$1',
+    '^@/(.*)$': '<rootDir>/src/$1',
   },
+  testEnvironment: 'node',
 };
+
+export default config;

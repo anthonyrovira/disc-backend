@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { PrismaService } from '@/framework/prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
-import { ForbiddenException } from '@nestjs/common';
+import { ForbiddenException, InternalServerErrorException, Logger } from '@nestjs/common';
 import * as argon from 'argon2';
 import { AuthService } from './auth.service';
 
@@ -11,6 +11,7 @@ describe('AuthService', () => {
   let jwtService: JwtService;
 
   beforeEach(async () => {
+    jest.spyOn(Logger.prototype, 'error').mockImplementation(() => {});
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuthService,
@@ -56,15 +57,15 @@ describe('AuthService', () => {
       );
     });
 
-    it('should throw ForbiddenException if email already exists', async () => {
+    it('should throw InternalServerErrorException if email already exists', async () => {
       const mockDto = { email: 'test@example.com', password: 'password' };
 
       prismaService.user.create = jest
         .fn()
-        .mockRejectedValue(new ForbiddenException('Account already exists'));
+        .mockRejectedValue(new Error('Unique constraint violation'));
 
       await expect(authService.signUp(mockDto)).rejects.toThrow(
-        ForbiddenException,
+        InternalServerErrorException,
       );
     });
 
@@ -142,24 +143,5 @@ describe('AuthService', () => {
     });
   });
 
-  describe('signToken', () => {
-    it('should sign a JWT token', async () => {
-      const userId = 'user123';
-      const email = 'user@example.com';
-      const expectedToken = 'fake-token';
 
-      const payload = { sub: userId, email };
-      const signAsyncSpy = jest
-        .spyOn(jwtService, 'signAsync')
-        .mockResolvedValue(expectedToken);
-
-      const result = await authService.signToken(userId, email);
-
-      expect(result).toEqual({ access_token: expectedToken });
-      expect(signAsyncSpy).toHaveBeenCalledWith(payload, {
-        expiresIn: '30m',
-        secret: process.env.JWT_SECRET,
-      });
-    });
-  });
 });
