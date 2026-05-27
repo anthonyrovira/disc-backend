@@ -1,5 +1,3 @@
-// form.controller.spec.ts
-
 import { Test, TestingModule } from '@nestjs/testing';
 import { FormController } from './form.controller';
 import { FormService } from './form.service';
@@ -16,7 +14,14 @@ describe('FormController', () => {
         {
           provide: FormService,
           useValue: {
+            getForms: jest.fn(),
+            getFormById: jest.fn(),
+            getNextQuestion: jest.fn(),
+            getFormQuestion: jest.fn(),
+            getDiscResult: jest.fn(),
             initForm: jest.fn(),
+            submitFormAnswer: jest.fn(),
+            updateFormAnswer: jest.fn(),
           },
         },
       ],
@@ -26,12 +31,40 @@ describe('FormController', () => {
     service = module.get<FormService>(FormService);
   });
 
-  it('should call initForm method', async () => {
-    const dto: InitFormDto = { name: 'Test Form' };
-    const mockUser = { id: 'user-id', email: 'test@test.com' };
+  it('should call initForm', async () => {
+    const dto: InitFormDto = { name: 'Test' };
+    const mockUser = { id: 'uid', email: 'test@test.com' };
 
     await controller.initForm(dto, mockUser as any);
 
-    expect(service.initForm).toHaveBeenCalledWith('Test Form', 'user-id');
+    expect(service.initForm).toHaveBeenCalledWith('Test', 'uid');
+  });
+
+  it('should call getNextQuestion', async () => {
+    await controller.getNextQuestion('form-id');
+
+    expect(service.getNextQuestion).toHaveBeenCalledWith('form-id');
+  });
+
+  it('should call submitFormAnswer', async () => {
+    const dto = { questionId: 'uuid-1', optionValue: '01_A' };
+
+    await controller.submitAnswer('form-id', dto);
+
+    expect(service.submitFormAnswer).toHaveBeenCalledWith('form-id', 'uuid-1', '01_A');
+  });
+
+  it('should call updateFormAnswer', async () => {
+    const dto = { optionValue: '01_B' };
+
+    await controller.updateAnswer('form-id', '1', dto);
+
+    expect(service.updateFormAnswer).toHaveBeenCalledWith('form-id', '1', '01_B');
+  });
+
+  it('should call getDiscResult', async () => {
+    await controller.getDiscResult('form-id');
+
+    expect(service.getDiscResult).toHaveBeenCalledWith('form-id');
   });
 });

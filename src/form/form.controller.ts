@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Put,
+  UseGuards,
+} from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiOperation,
@@ -8,8 +16,16 @@ import {
 import { JwtGuard } from '@/auth/guard';
 import { FormService } from './form.service';
 import { GetUser } from '@/user/decorator';
-import { InitFormDto, UserDto } from '@/core/dtos';
-import { Form } from '@prisma/client';
+import {
+  AnswerResponseDto,
+  DiscResultDto,
+  FormQuestionResponseDto,
+  InitFormDto,
+  SubmitAnswerDto,
+  UpdateAnswerDto,
+  UserDto,
+} from '@/core/dtos';
+import { Form } from '../../generated/prisma/client';
 
 @ApiTags('Form')
 @UseGuards(JwtGuard)
@@ -23,6 +39,38 @@ export class FormController {
   @Get()
   async getForms(@GetUser() user: UserDto) {
     return this.formService.getForms(user.id);
+  }
+
+  @ApiOperation({ summary: 'Get the next unanswered question or the result' })
+  @ApiResponse({ status: 200, description: 'Next question or final result' })
+  @Get(':id/next')
+  async getNextQuestion(@Param('id') id: string) {
+    return this.formService.getNextQuestion(id);
+  }
+
+  @ApiOperation({ summary: 'Review a question and its current answer' })
+  @ApiResponse({
+    status: 200,
+    description: 'Question with current answer',
+    type: FormQuestionResponseDto,
+  })
+  @Get(':id/question/:qId')
+  async getFormQuestion(
+    @Param('id') id: string,
+    @Param('qId') qId: string,
+  ): Promise<FormQuestionResponseDto> {
+    return this.formService.getFormQuestion(id, qId);
+  }
+
+  @ApiOperation({ summary: 'Get DISC result for a form' })
+  @ApiResponse({
+    status: 200,
+    description: 'DISC result computed successfully',
+    type: DiscResultDto,
+  })
+  @Get(':id/result')
+  async getDiscResult(@Param('id') id: string): Promise<DiscResultDto> {
+    return this.formService.getDiscResult(id);
   }
 
   @ApiOperation({ summary: 'Get a form by id' })
@@ -40,5 +88,38 @@ export class FormController {
     @GetUser() user: UserDto,
   ): Promise<Form> {
     return this.formService.initForm(dto.name, user.id);
+  }
+
+  @ApiOperation({ summary: 'Submit an answer for a question' })
+  @ApiResponse({
+    status: 201,
+    description: 'Answer submitted with progress',
+    type: AnswerResponseDto,
+  })
+  @Post(':id/answer')
+  async submitAnswer(
+    @Param('id') formId: string,
+    @Body() dto: SubmitAnswerDto,
+  ): Promise<AnswerResponseDto> {
+    return this.formService.submitFormAnswer(
+      formId,
+      dto.questionId,
+      dto.optionValue,
+    );
+  }
+
+  @ApiOperation({ summary: 'Update an existing answer' })
+  @ApiResponse({
+    status: 200,
+    description: 'Answer updated with progress',
+    type: AnswerResponseDto,
+  })
+  @Put(':id/answer/:qId')
+  async updateAnswer(
+    @Param('id') formId: string,
+    @Param('qId') qId: string,
+    @Body() dto: UpdateAnswerDto,
+  ): Promise<AnswerResponseDto> {
+    return this.formService.updateFormAnswer(formId, qId, dto.optionValue);
   }
 }

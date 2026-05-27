@@ -18,28 +18,51 @@ model User {
 }
 
 model Question {
-    id      Int      @id @default(autoincrement())
-    content String
-    options Option[]
-    Answer  Answer[]
+    id            String         @id @default(uuid())
+    content       String
+    options       Option[]
+    Answer        Answer[]
+    formQuestions FormQuestion[]
+}
+
+enum DiscDimension {
+    D
+    I
+    S
+    C
 }
 
 model Option {
-    value      String   @unique
+    value      String        @unique
     content    String
-    Question   Question @relation(fields: [questionId], references: [id])
-    questionId Int
+    dimension  DiscDimension
+    Question   Question      @relation(fields: [questionId], references: [id])
+    questionId String
     Answer     Answer[]
 }
 
 model Form {
-    id         String    @id @default(uuid())
-    name       String    @default("disc_form")
-    User       User      @relation(fields: [user_id], references: [id])
+    id         String         @id @default(uuid())
+    name       String         @default("disc_form")
+    status     String         @default("in_progress")
+    User       User           @relation(fields: [user_id], references: [id])
     user_id    String
     answers    Answer[]
-    created_at DateTime? @default(now())
+    questions  FormQuestion[]
+    created_at DateTime?      @default(now())
     updated_at DateTime?
+}
+
+model FormQuestion {
+    id         String   @id @default(cuid())
+    form       Form     @relation(fields: [formId], references: [id])
+    formId     String
+    question   Question @relation(fields: [questionId], references: [id])
+    questionId String
+    order      Int
+    answered   Boolean  @default(false)
+
+    @@unique([formId, questionId])
 }
 
 model Answer {
@@ -47,8 +70,10 @@ model Answer {
     Option      Option    @relation(fields: [optionValue], references: [value])
     optionValue String
     Question    Question  @relation(fields: [question_id], references: [id])
-    question_id Int
+    question_id String
     Form        Form      @relation(fields: [form_id], references: [id])
     form_id     String
     updated_at  DateTime? @default(now())
+
+    @@unique([form_id, question_id])
 }

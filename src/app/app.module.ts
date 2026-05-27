@@ -7,7 +7,6 @@ import { AuthModule } from '@/auth';
 import { UserModule } from '@/user';
 import { AppController } from '.';
 import { FormModule } from '@/form/form.module';
-import { AnswerModule } from '@/answer/answer.module';
 
 @Module({
   imports: [
@@ -15,7 +14,6 @@ import { AnswerModule } from '@/answer/answer.module';
     AuthModule,
     UserModule,
     FormModule,
-    AnswerModule,
     QuestionModule,
     PrismaModule,
   ],
