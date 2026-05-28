@@ -47,8 +47,31 @@ export class UserService {
   }
 
   async deleteUser(where: Prisma.UserWhereUniqueInput): Promise<User> {
-    return this.prisma.user.delete({
+    const user = await this.prisma.user.findUnique({
       where,
+      select: { id: true },
     });
+    if (!user) throw new Error('User not found');
+
+    const formIds = (
+      await this.prisma.form.findMany({
+        where: { user_id: user.id },
+        select: { id: true },
+      })
+    ).map((f) => f.id);
+
+    if (formIds.length > 0) {
+      await this.prisma.answer.deleteMany({
+        where: { form_id: { in: formIds } },
+      });
+      await this.prisma.formQuestion.deleteMany({
+        where: { formId: { in: formIds } },
+      });
+      await this.prisma.form.deleteMany({
+        where: { id: { in: formIds } },
+      });
+    }
+
+    return this.prisma.user.delete({ where });
   }
 }

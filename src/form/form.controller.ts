@@ -1,7 +1,9 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
+  HttpCode,
   Param,
   Post,
   Put,
@@ -88,6 +90,17 @@ export class FormController {
     @GetUser() user: UserDto,
   ): Promise<Form> {
     return this.formService.initForm(dto.name, user.id);
+  }
+
+  @ApiOperation({ summary: 'Delete a form and all its answers' })
+  @ApiResponse({ status: 204, description: 'Form deleted successfully' })
+  @Delete(':id')
+  @HttpCode(204)
+  async deleteForm(
+    @Param('id') id: string,
+    @GetUser() user: UserDto,
+  ): Promise<void> {
+    return this.formService.deleteForm(id, user.id);
   }
 
   @ApiOperation({ summary: 'Submit an answer for a question' })

@@ -47,7 +47,7 @@ describe('FormService', () => {
 
   describe('initForm', () => {
     it('should create a form with 18 shuffled questions', async () => {
-      const mockQuestions = Array.from({ length: 18 }, (_, i) => ({ id: `q-${i + 1}` }));
+      const mockQuestions = Array.from({ length: 43 }, (_, i) => ({ id: `q-${i + 1}` }));
       const mockForm = { id: 'form-id', name: 'Test', status: 'in_progress', user_id: 'user1', created_at: new Date(), updated_at: null };
 
       prisma.question.findMany = jest.fn().mockResolvedValue(mockQuestions);
@@ -66,7 +66,7 @@ describe('FormService', () => {
       });
 
       const createCall = (prisma.form.create as jest.Mock).mock.calls[0][0];
-      expect(createCall.data.questions.create).toHaveLength(18);
+      expect(createCall.data.questions.create).toHaveLength(30);
     });
   });
 

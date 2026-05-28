@@ -35,7 +35,7 @@ export class FormService {
       select: { id: true },
     });
 
-    const shuffled = this.shuffle(allQuestions.map((q) => q.id));
+    const shuffled = this.shuffle(allQuestions.map((q) => q.id)).slice(0, 30);
 
     return this.prisma.form.create({
       data: {
@@ -281,6 +281,20 @@ export class FormService {
       where: { id: formId },
       data: { status: 'completed', updated_at: new Date() },
     });
+  }
+
+  async deleteForm(formId: string, userId: string): Promise<void> {
+    const form = await this.prisma.form.findUnique({ where: { id: formId } });
+    if (!form) {
+      throw new NotFoundException(`Form with ID ${formId} not found`);
+    }
+    if (form.user_id !== userId) {
+      throw new NotFoundException(`Form with ID ${formId} not found`);
+    }
+
+    await this.prisma.answer.deleteMany({ where: { form_id: formId } });
+    await this.prisma.formQuestion.deleteMany({ where: { formId } });
+    await this.prisma.form.delete({ where: { id: formId } });
   }
 
   private shuffle(array: string[]): string[] {
