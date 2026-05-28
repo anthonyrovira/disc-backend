@@ -7,10 +7,6 @@ export class InitFormDto {
   @IsString()
   @IsNotEmpty()
   name: string;
-
-  constructor({ name }: { name: string }) {
-    this.name = name;
-  }
 }
 
 export class AnswerProgressDto {
