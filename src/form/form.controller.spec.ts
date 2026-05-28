@@ -22,6 +22,7 @@ describe('FormController', () => {
             initForm: jest.fn(),
             submitFormAnswer: jest.fn(),
             updateFormAnswer: jest.fn(),
+            deleteForm: jest.fn(),
           },
         },
       ],
@@ -66,5 +67,13 @@ describe('FormController', () => {
     await controller.getDiscResult('form-id');
 
     expect(service.getDiscResult).toHaveBeenCalledWith('form-id');
+  });
+
+  it('should call deleteForm', async () => {
+    const mockUser = { id: 'uid', email: 'test@test.com' };
+
+    await controller.deleteForm('form-id', mockUser as any);
+
+    expect(service.deleteForm).toHaveBeenCalledWith('form-id', 'uid');
   });
 });

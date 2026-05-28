@@ -21,16 +21,19 @@ describe('FormService', () => {
               findUnique: jest.fn(),
               findMany: jest.fn(),
               update: jest.fn(),
+              delete: jest.fn(),
             },
             formQuestion: {
               findUnique: jest.fn(),
               count: jest.fn(),
               update: jest.fn(),
+              deleteMany: jest.fn(),
             },
             answer: {
               create: jest.fn(),
               findUnique: jest.fn(),
               update: jest.fn(),
+              deleteMany: jest.fn(),
             },
           },
         },
@@ -82,6 +85,40 @@ describe('FormService', () => {
         where: { user_id: 'user1' },
         orderBy: { created_at: 'desc' },
       });
+    });
+  });
+
+  describe('deleteForm', () => {
+    it('should delete form and all related records', async () => {
+      const mockForm = { id: 'form-id', user_id: 'user1' };
+      prisma.form.findUnique = jest.fn().mockResolvedValue(mockForm);
+      prisma.answer.deleteMany = jest.fn().mockResolvedValue({ count: 5 });
+      prisma.formQuestion.deleteMany = jest.fn().mockResolvedValue({ count: 30 });
+      prisma.form.delete = jest.fn().mockResolvedValue(mockForm);
+
+      await service.deleteForm('form-id', 'user1');
+
+      expect(prisma.form.findUnique).toHaveBeenCalledWith({ where: { id: 'form-id' } });
+      expect(prisma.answer.deleteMany).toHaveBeenCalledWith({ where: { form_id: 'form-id' } });
+      expect(prisma.formQuestion.deleteMany).toHaveBeenCalledWith({ where: { formId: 'form-id' } });
+      expect(prisma.form.delete).toHaveBeenCalledWith({ where: { id: 'form-id' } });
+    });
+
+    it('should throw NotFoundException if form not found', async () => {
+      prisma.form.findUnique = jest.fn().mockResolvedValue(null);
+
+      await expect(service.deleteForm('form-id', 'user1')).rejects.toThrow(
+        'Form with ID form-id not found',
+      );
+    });
+
+    it('should throw NotFoundException if form belongs to another user', async () => {
+      const mockForm = { id: 'form-id', user_id: 'other-user' };
+      prisma.form.findUnique = jest.fn().mockResolvedValue(mockForm);
+
+      await expect(service.deleteForm('form-id', 'user1')).rejects.toThrow(
+        'Form with ID form-id not found',
+      );
     });
   });
 
