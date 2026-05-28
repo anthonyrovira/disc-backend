@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ScheduleModule } from '@nestjs/schedule';
 import { AppService } from './app.service';
 import { ConfigModule } from '@nestjs/config';
 import { PrismaModule } from '../framework/prisma/prisma.module';
@@ -11,6 +12,7 @@ import { FormModule } from '@/form/form.module';
 @Module({
   imports: [
     ConfigModule.forRoot(),
+    ScheduleModule.forRoot(),
     AuthModule,
     UserModule,
     FormModule,

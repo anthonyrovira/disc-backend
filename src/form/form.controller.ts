@@ -5,6 +5,7 @@ import {
   Get,
   HttpCode,
   Param,
+  Patch,
   Post,
   Put,
   UseGuards,
@@ -15,7 +16,7 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import { JwtGuard } from '@/auth/guard';
+import { JwtGuard, OptionalJwtGuard } from '@/auth/guard';
 import { FormService } from './form.service';
 import { GetUser } from '@/user/decorator';
 import {
@@ -30,12 +31,13 @@ import {
 import { Form } from '../../generated/prisma/client';
 
 @ApiTags('Form')
-@UseGuards(JwtGuard)
-@ApiBearerAuth()
+@UseGuards(OptionalJwtGuard)
 @Controller('form')
 export class FormController {
   constructor(private readonly formService: FormService) {}
 
+  @UseGuards(JwtGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Get all forms for the authenticated user' })
   @ApiResponse({ status: '2XX', description: 'Forms retrieved successfully' })
   @Get()
@@ -82,6 +84,8 @@ export class FormController {
     return this.formService.getFormById(id);
   }
 
+  @UseGuards(JwtGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Create and initialize a form' })
   @ApiResponse({ status: '2XX', description: 'Form created successfully' })
   @Post('init')
@@ -92,6 +96,27 @@ export class FormController {
     return this.formService.initForm(dto.name, user.id);
   }
 
+  @ApiOperation({ summary: 'Create and initialize an anonymous form' })
+  @ApiResponse({ status: 201, description: 'Anonymous form created' })
+  @Post('init-anon')
+  async initAnonForm(@Body() dto: InitFormDto): Promise<Form> {
+    return this.formService.initAnonForm(dto.name);
+  }
+
+  @UseGuards(JwtGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Claim an anonymous form' })
+  @ApiResponse({ status: 200, description: 'Form claimed successfully' })
+  @Patch(':id/claim')
+  async claimForm(
+    @Param('id') id: string,
+    @GetUser() user: UserDto,
+  ): Promise<Form> {
+    return this.formService.claimForm(id, user.id);
+  }
+
+  @UseGuards(JwtGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Delete a form and all its answers' })
   @ApiResponse({ status: 204, description: 'Form deleted successfully' })
   @Delete(':id')

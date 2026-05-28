@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { DiscDimension } from '../../../../generated/prisma/client';
+
+type DiscDim = 'D' | 'I' | 'S' | 'C';
 
 export class AnswerDetailDto {
   @ApiProperty({ description: 'The question id', example: 'uuid-1' })
@@ -15,7 +16,7 @@ export class AnswerDetailDto {
   optionContent: string;
 
   @ApiProperty({ description: 'The DISC dimension', example: 'D' })
-  dimension: DiscDimension;
+  dimension: DiscDim;
 }
 
 export class DiscScoresDto {
@@ -37,10 +38,10 @@ export class DiscResultDto {
   scores: DiscScoresDto;
 
   @ApiProperty({ description: 'Primary DISC dimension', example: 'D' })
-  primary: DiscDimension;
+  primary: DiscDim;
 
   @ApiProperty({ description: 'Secondary DISC dimension', example: 'I', nullable: true })
-  secondary: DiscDimension | null;
+  secondary: DiscDim | null;
 
   @ApiProperty({ description: 'Profile code', example: 'Di' })
   profile: string;

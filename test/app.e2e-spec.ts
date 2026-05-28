@@ -6,6 +6,12 @@ import { AppModule } from '@/app/app.module';
 describe('AppController (e2e)', () => {
   let app: INestApplication;
 
+  beforeAll(async () => {
+    process.env.GOOGLE_CLIENT_ID = 'test';
+    process.env.GOOGLE_CLIENT_SECRET = 'test';
+    process.env.GOOGLE_CALLBACK_URL = 'http://localhost:3001/auth/google/callback';
+  });
+
   beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],

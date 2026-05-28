@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
 
 export class AuthRequestDto {
@@ -25,6 +25,28 @@ export class AuthResponseDto {
     example: 'eyJhbGciOiJIUzI1N-PJievw8NBlE',
   })
   access_token: string;
+
+  @ApiProperty({
+    description: 'The refresh token',
+    example: '4f8c2a1b...',
+  })
+  refresh_token: string;
+
+  @ApiProperty({
+    description: 'Access token TTL in seconds',
+    example: 900,
+  })
+  expires_in: number;
+}
+
+export class RefreshTokenRequestDto {
+  @ApiProperty({
+    description: 'The refresh token',
+    example: '4f8c2a1b...',
+  })
+  @IsString()
+  @IsNotEmpty()
+  refresh_token: string;
 }
 
 export class JwtPayloadDto {

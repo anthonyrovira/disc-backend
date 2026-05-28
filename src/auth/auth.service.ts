@@ -1,4 +1,5 @@
 import {
+  ConflictException,
   ForbiddenException,
   Injectable,
   InternalServerErrorException,
@@ -8,10 +9,15 @@ import { AuthRequestDto, AuthResponseDto, JwtPayloadDto } from '@/core/dtos';
 import { PrismaService } from '@/framework/prisma/prisma.service';
 import * as argon from 'argon2';
 import { JwtService } from '@nestjs/jwt';
+import { RefreshTokenService } from './refresh-token.service';
 
 @Injectable()
 export class AuthService {
-  constructor(private prisma: PrismaService, private jwt: JwtService) {}
+  constructor(
+    private prisma: PrismaService,
+    private jwt: JwtService,
+    private refreshTokenService: RefreshTokenService,
+  ) {}
 
   private readonly logger = new Logger(AuthService.name);
 
@@ -25,7 +31,10 @@ export class AuthService {
         },
       });
 
-      return this._signToken(user.id, user.email);
+      const access_token = await this._signAccessToken(user.id, user.email);
+      const refresh_token = await this.refreshTokenService.generate(user.id);
+
+      return { access_token, refresh_token, expires_in: 900 };
     } catch (error) {
       this.logger.error(error);
       throw new InternalServerErrorException();
@@ -34,38 +43,84 @@ export class AuthService {
 
   async signIn(dto: AuthRequestDto): Promise<AuthResponseDto> {
     const user = await this.prisma.user.findUnique({
-      where: {
-        email: dto.email,
-      },
+      where: { email: dto.email },
     });
 
     if (!user) {
       throw new ForbiddenException('Credentials incorrect');
     }
 
-    const passwordMatches = await argon.verify(user.hash, dto.password);
+    if (!user.hash) {
+      throw new ForbiddenException(
+        'This email uses Google login. Please sign in with Google.',
+      );
+    }
 
+    const passwordMatches = await argon.verify(user.hash, dto.password);
     if (!passwordMatches) {
       throw new ForbiddenException('Credentials incorrect');
     }
 
-    return this._signToken(user.id, user.email);
+    const access_token = await this._signAccessToken(user.id, user.email);
+    const refresh_token = await this.refreshTokenService.generate(user.id);
+
+    return { access_token, refresh_token, expires_in: 900 };
   }
 
-  private async _signToken(
-    userId: string,
-    email: string,
-  ): Promise<AuthResponseDto> {
-    const payload: JwtPayloadDto = {
-      sub: userId,
-      email,
-    };
+  async refresh(rawToken: string): Promise<AuthResponseDto> {
+    return this.refreshTokenService.rotate(rawToken);
+  }
 
-    const token = await this.jwt.signAsync(payload, {
-      expiresIn: '30m',
-      secret: process.env.JWT_SECRET,
+  async logout(userId: string): Promise<void> {
+    await this.refreshTokenService.revokeAll(userId);
+  }
+
+  async googleLogin(user: {
+    email: string;
+    googleId: string;
+    username: string;
+  }): Promise<AuthResponseDto> {
+    let existing = await this.prisma.user.findUnique({
+      where: { email: user.email },
     });
 
-    return { access_token: token };
+    if (existing) {
+      if (existing.hash) {
+        throw new ConflictException(
+          'An account with this email already uses password login. Please sign in with your email and password.',
+        );
+      }
+
+      if (existing.googleId !== user.googleId) {
+        existing = await this.prisma.user.update({
+          where: { id: existing.id },
+          data: { googleId: user.googleId },
+        });
+      }
+    } else {
+      existing = await this.prisma.user.create({
+        data: {
+          email: user.email,
+          googleId: user.googleId,
+          username: user.username,
+        },
+      });
+    }
+
+    const access_token = await this._signAccessToken(existing.id, existing.email);
+    const refresh_token = await this.refreshTokenService.generate(existing.id);
+
+    return { access_token, refresh_token, expires_in: 900 };
+  }
+
+  private async _signAccessToken(
+    userId: string,
+    email: string,
+  ): Promise<string> {
+    const payload: JwtPayloadDto = { sub: userId, email };
+    return this.jwt.signAsync(payload, {
+      expiresIn: '15m',
+      secret: process.env.JWT_SECRET,
+    });
   }
 }

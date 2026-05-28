@@ -12,6 +12,7 @@ async function main() {
   await prisma.$executeRawUnsafe('DELETE FROM Answer');
   await prisma.$executeRawUnsafe('DELETE FROM FormQuestion');
   await prisma.$executeRawUnsafe('DELETE FROM Form');
+  await prisma.$executeRawUnsafe('DELETE FROM RefreshToken');
   await prisma.$executeRawUnsafe('DELETE FROM Option');
   await prisma.$executeRawUnsafe('DELETE FROM Question');
   await prisma.$executeRawUnsafe('DELETE FROM User');

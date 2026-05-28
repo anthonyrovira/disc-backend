@@ -4,11 +4,13 @@ import { JwtService } from '@nestjs/jwt';
 import { ForbiddenException, InternalServerErrorException, Logger } from '@nestjs/common';
 import * as argon from 'argon2';
 import { AuthService } from './auth.service';
+import { RefreshTokenService } from './refresh-token.service';
 
 describe('AuthService', () => {
   let authService: AuthService;
   let prismaService: PrismaService;
   let jwtService: JwtService;
+  let refreshTokenService: RefreshTokenService;
 
   beforeEach(async () => {
     jest.spyOn(Logger.prototype, 'error').mockImplementation(() => {});
@@ -30,31 +32,47 @@ describe('AuthService', () => {
             signAsync: jest.fn(),
           },
         },
+        {
+          provide: RefreshTokenService,
+          useValue: {
+            generate: jest.fn(),
+            rotate: jest.fn(),
+            revokeAll: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
     authService = module.get<AuthService>(AuthService);
     prismaService = module.get<PrismaService>(PrismaService);
     jwtService = module.get<JwtService>(JwtService);
+    refreshTokenService = module.get<RefreshTokenService>(RefreshTokenService);
   });
 
   describe('signUp', () => {
-    it('should create a new user and return a token', async () => {
+    it('should create a new user and return tokens', async () => {
       const mockDto = { email: 'test@example.com', password: 'password' };
       const mockUser = { id: 'userId', email: 'test@example.com' };
-      const mockToken = 'mockToken';
+      const mockToken = 'mockAccessToken';
+      const mockRefresh = 'mockRefreshToken';
 
       prismaService.user.create = jest.fn().mockResolvedValue(mockUser);
       jwtService.signAsync = jest.fn().mockResolvedValue(mockToken);
+      refreshTokenService.generate = jest.fn().mockResolvedValue(mockRefresh);
 
       const result = await authService.signUp(mockDto);
 
-      expect(result).toEqual({ access_token: mockToken });
+      expect(result).toEqual({
+        access_token: mockToken,
+        refresh_token: mockRefresh,
+        expires_in: 900,
+      });
       expect(prismaService.user.create).toHaveBeenCalled();
       expect(jwtService.signAsync).toHaveBeenCalledWith(
         { sub: mockUser.id, email: mockUser.email },
-        { expiresIn: '30m', secret: process.env.JWT_SECRET },
+        { expiresIn: '15m', secret: process.env.JWT_SECRET },
       );
+      expect(refreshTokenService.generate).toHaveBeenCalledWith(mockUser.id);
     });
 
     it('should throw InternalServerErrorException if email already exists', async () => {
@@ -81,7 +99,7 @@ describe('AuthService', () => {
   });
 
   describe('signIn', () => {
-    it('should return a token if credentials are correct', async () => {
+    it('should return tokens if credentials are correct', async () => {
       const mockDto = { email: 'test@example.com', password: 'password' };
       const mockedHash = await argon.hash(mockDto.password);
       const mockUser = {
@@ -89,21 +107,28 @@ describe('AuthService', () => {
         email: 'test@example.com',
         hash: mockedHash,
       };
-      const mockToken = 'mockToken';
+      const mockToken = 'mockAccessToken';
+      const mockRefresh = 'mockRefreshToken';
 
       prismaService.user.findUnique = jest.fn().mockResolvedValue(mockUser);
       jwtService.signAsync = jest.fn().mockResolvedValue(mockToken);
+      refreshTokenService.generate = jest.fn().mockResolvedValue(mockRefresh);
 
       const result = await authService.signIn(mockDto);
 
-      expect(result).toEqual({ access_token: mockToken });
+      expect(result).toEqual({
+        access_token: mockToken,
+        refresh_token: mockRefresh,
+        expires_in: 900,
+      });
       expect(prismaService.user.findUnique).toHaveBeenCalledWith({
         where: { email: mockDto.email },
       });
       expect(jwtService.signAsync).toHaveBeenCalledWith(
         { sub: mockUser.id, email: mockUser.email },
-        { expiresIn: '30m', secret: process.env.JWT_SECRET },
+        { expiresIn: '15m', secret: process.env.JWT_SECRET },
       );
+      expect(refreshTokenService.generate).toHaveBeenCalledWith(mockUser.id);
     });
 
     it('should throw ForbiddenException if user not found', async () => {
@@ -113,6 +138,24 @@ describe('AuthService', () => {
 
       await expect(authService.signIn(mockDto)).rejects.toThrow(
         ForbiddenException,
+      );
+    });
+
+    it('should throw ForbiddenException if user is Google-only', async () => {
+      const mockDto = { email: 'test@example.com', password: 'password' };
+      const mockUser = {
+        id: 'userId',
+        email: 'test@example.com',
+        hash: null,
+      };
+
+      prismaService.user.findUnique = jest.fn().mockResolvedValue(mockUser);
+
+      await expect(authService.signIn(mockDto)).rejects.toThrow(
+        ForbiddenException,
+      );
+      await expect(authService.signIn(mockDto)).rejects.toThrow(
+        'Please sign in with Google.',
       );
     });
 
@@ -142,6 +185,4 @@ describe('AuthService', () => {
       await expect(authService.signIn(mockDto)).rejects.toThrow(Error);
     });
   });
-
-
 });

@@ -16,6 +16,9 @@ describe('AuthController', () => {
           useValue: {
             signUp: jest.fn(),
             signIn: jest.fn(),
+            refresh: jest.fn(),
+            logout: jest.fn(),
+            googleLogin: jest.fn(),
           },
         },
       ],
@@ -26,12 +29,16 @@ describe('AuthController', () => {
   });
 
   describe('signUp', () => {
-    it('should return JWT token on successful signup', async () => {
+    it('should return tokens on successful signup', async () => {
       const authRequestDto: AuthRequestDto = {
         email: 'user@example.com',
         password: 'password',
       };
-      const expectedResponse: AuthResponseDto = { access_token: 'fake-token' };
+      const expectedResponse: AuthResponseDto = {
+        access_token: 'fake-token',
+        refresh_token: 'fake-refresh',
+        expires_in: 900,
+      };
       authService.signUp = jest.fn().mockResolvedValue(expectedResponse);
 
       const result = await authController.signUp(authRequestDto);
@@ -42,12 +49,16 @@ describe('AuthController', () => {
   });
 
   describe('signIn', () => {
-    it('should return JWT token on successful signin', async () => {
+    it('should return tokens on successful signin', async () => {
       const authRequestDto: AuthRequestDto = {
         email: 'user@example.com',
         password: 'password',
       };
-      const expectedResponse: AuthResponseDto = { access_token: 'fake-token' };
+      const expectedResponse: AuthResponseDto = {
+        access_token: 'fake-token',
+        refresh_token: 'fake-refresh',
+        expires_in: 900,
+      };
       authService.signIn = jest.fn().mockResolvedValue(expectedResponse);
 
       const result = await authController.signIn(authRequestDto);
@@ -55,18 +66,32 @@ describe('AuthController', () => {
       expect(result).toEqual(expectedResponse);
       expect(authService.signIn).toHaveBeenCalledWith(authRequestDto);
     });
+  });
 
-    it('should set the response status to HttpStatus.OK', async () => {
-      const authRequestDto: AuthRequestDto = {
-        email: 'user@example.com',
-        password: 'password',
+  describe('refresh', () => {
+    it('should return new tokens on refresh', async () => {
+      const dto = { refresh_token: 'old-refresh' };
+      const expectedResponse: AuthResponseDto = {
+        access_token: 'new-token',
+        refresh_token: 'new-refresh',
+        expires_in: 900,
       };
-      authService.signIn = jest.fn();
+      authService.refresh = jest.fn().mockResolvedValue(expectedResponse);
 
-      await authController.signIn(authRequestDto);
+      const result = await authController.refresh(dto);
 
-      expect(authService.signIn).toHaveBeenCalledWith(authRequestDto);
-      expect(authService.signIn).toHaveBeenCalledWith(authRequestDto);
+      expect(result).toEqual(expectedResponse);
+      expect(authService.refresh).toHaveBeenCalledWith('old-refresh');
+    });
+  });
+
+  describe('logout', () => {
+    it('should call logout with user id', async () => {
+      const mockUser = { id: 'uid', email: 'test@test.com' };
+
+      await authController.logout(mockUser as any);
+
+      expect(authService.logout).toHaveBeenCalledWith('uid');
     });
   });
 });
