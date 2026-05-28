@@ -6,6 +6,7 @@ import {
   DiscResultDto,
   DiscScoresDto,
   AnswerDetailDto,
+  CategoryScoreDto,
   FormQuestionResponseDto,
   NextQuestionDataDto,
 } from '@/core/dtos';
@@ -252,13 +253,22 @@ export class FormService {
 
     const scores: DiscScoresDto = { D: 0, I: 0, S: 0, C: 0 };
     const answers: AnswerDetailDto[] = [];
+    const categoryMap = new Map<string, DiscScoresDto>();
 
     for (const answer of form.answers) {
       const dimension = answer.Option.dimension as 'D' | 'I' | 'S' | 'C';
+      const cat = answer.Question.category ?? 'Autre';
       scores[dimension]++;
+
+      if (!categoryMap.has(cat)) {
+        categoryMap.set(cat, { D: 0, I: 0, S: 0, C: 0 });
+      }
+      categoryMap.get(cat)![dimension]++;
+
       answers.push({
         questionId: answer.question_id,
         questionContent: answer.Question.content,
+        category: answer.Question.category ?? undefined,
         optionValue: answer.optionValue,
         optionContent: answer.Option.content,
         dimension,
@@ -275,6 +285,19 @@ export class FormService {
     const gap = scores[primary] - (secondary ? scores[secondary] : 0);
     const profile = secondary && gap < 2 ? `${primary}${secondary}` : primary;
 
+    const categoryScores: CategoryScoreDto[] = [];
+    for (const [category, catScores] of categoryMap) {
+      const dims = Object.entries(catScores) as [string, number][];
+      dims.sort((a, b) => b[1] - a[1]);
+      const total = dims.reduce((s, [, v]) => s + v, 0);
+      categoryScores.push({
+        category,
+        scores: catScores,
+        dominant: dims[0][1] > 0 ? (dims[0][0] as 'D' | 'I' | 'S' | 'C') : 'D',
+        total,
+      });
+    }
+
     return {
       scores,
       primary,
@@ -282,6 +305,7 @@ export class FormService {
       profile,
       total: form.answers.length,
       answers,
+      categoryScores,
     };
   }
 

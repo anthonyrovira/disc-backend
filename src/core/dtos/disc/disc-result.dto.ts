@@ -9,6 +9,9 @@ export class AnswerDetailDto {
   @ApiProperty({ description: 'The question content', example: "Concernant votre poignée de main :" })
   questionContent: string;
 
+  @ApiProperty({ description: 'The question category', example: 'Communication & Expression' })
+  category?: string;
+
   @ApiProperty({ description: 'The selected option value', example: '01_A' })
   optionValue: string;
 
@@ -33,6 +36,20 @@ export class DiscScoresDto {
   C: number;
 }
 
+export class CategoryScoreDto {
+  @ApiProperty({ description: 'Category name', example: 'Travail & Décisions' })
+  category: string;
+
+  @ApiProperty({ description: 'Scores per dimension for this category' })
+  scores: DiscScoresDto;
+
+  @ApiProperty({ description: 'Dominant DISC dimension', example: 'D' })
+  dominant: DiscDim;
+
+  @ApiProperty({ description: 'Total answers in this category', example: 5 })
+  total: number;
+}
+
 export class DiscResultDto {
   @ApiProperty({ description: 'Scores per dimension' })
   scores: DiscScoresDto;
@@ -51,4 +68,7 @@ export class DiscResultDto {
 
   @ApiProperty({ description: 'List of answers with dimension details', type: [AnswerDetailDto] })
   answers: AnswerDetailDto[];
+
+  @ApiProperty({ description: 'Scores broken down by question category', type: [CategoryScoreDto] })
+  categoryScores: CategoryScoreDto[];
 }

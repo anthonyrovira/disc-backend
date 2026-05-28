@@ -22,6 +22,7 @@ async function main() {
     const newQuestion = await prisma.question.create({
       data: {
         content: question.question,
+        category: question.category,
       },
     });
 
