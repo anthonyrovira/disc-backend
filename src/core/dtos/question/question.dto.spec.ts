@@ -1,25 +1,25 @@
-import { Question } from './question.dto';
+import { QuestionResponseDto } from './question.dto';
 
-describe('Question', () => {
+describe('QuestionResponseDto', () => {
   it('should create an instance', () => {
-    const data: Question = {
-      id: 1,
-      question: 'What is your favorite color?',
+    const data: QuestionResponseDto = {
+      id: 'uuid-1',
+      content: 'What is your favorite color?',
       options: [
         { value: '01_A', content: 'Red' },
         { value: '01_B', content: 'Blue' },
       ],
     };
 
-    const questionDto = new Question(data);
+    const dto = new QuestionResponseDto(data);
 
-    expect(questionDto).toBeDefined();
-    expect(questionDto.id).toBe(1);
-    expect(questionDto.question).toBe('What is your favorite color?');
-    expect(questionDto.options).toHaveLength(2);
-    expect(questionDto.options[0].value).toBe('01_A');
-    expect(questionDto.options[0].content).toBe('Red');
-    expect(questionDto.options[1].value).toBe('01_B');
-    expect(questionDto.options[1].content).toBe('Blue');
+    expect(dto).toBeDefined();
+    expect(dto.id).toBe('uuid-1');
+    expect(dto.content).toBe('What is your favorite color?');
+    expect(dto.options).toHaveLength(2);
+    expect(dto.options[0].value).toBe('01_A');
+    expect(dto.options[0].content).toBe('Red');
+    expect(dto.options[1].value).toBe('01_B');
+    expect(dto.options[1].content).toBe('Blue');
   });
 });

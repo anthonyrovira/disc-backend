@@ -9,9 +9,7 @@ import {
   FormQuestionResponseDto,
   NextQuestionDataDto,
 } from '@/core/dtos';
-import { Form } from '../../generated/prisma/client';
-
-type Dimension = 'D' | 'I' | 'S' | 'C';
+import { DiscDimension, Form } from '../../generated/prisma/client';
 
 @Injectable()
 export class FormService {
@@ -229,7 +227,7 @@ export class FormService {
     const answers: AnswerDetailDto[] = [];
 
     for (const answer of form.answers) {
-      const dimension = answer.Option.dimension as Dimension;
+      const dimension = answer.Option.dimension as DiscDimension;
       scores[dimension]++;
       answers.push({
         questionId: answer.question_id,
@@ -240,7 +238,7 @@ export class FormService {
       });
     }
 
-    const sorted = (['D', 'I', 'S', 'C'] as Dimension[]).sort(
+    const sorted = (['D', 'I', 'S', 'C'] as DiscDimension[]).sort(
       (a, b) => scores[b] - scores[a],
     );
 

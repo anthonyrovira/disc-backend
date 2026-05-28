@@ -1,18 +1,18 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Option } from '../option/option.dto';
 
-export class Question {
+export class QuestionResponseDto {
   @ApiProperty({
     description: 'The unique identifier of the question',
-    example: 1,
+    example: 'uuid-1',
   })
-  id: number;
+  id: string;
 
   @ApiProperty({
     description: 'The text of the question',
     example: 'What is your favorite color?',
   })
-  question: string;
+  content: string;
 
   @ApiProperty({
     isArray: true,
@@ -22,15 +22,15 @@ export class Question {
 
   constructor({
     id,
-    question,
+    content,
     options,
   }: {
-    id: number;
-    question: string;
+    id: string;
+    content: string;
     options: Option[];
   }) {
     this.id = id;
-    this.question = question;
+    this.content = content;
     this.options = options;
   }
 }
