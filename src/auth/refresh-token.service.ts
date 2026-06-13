@@ -1,7 +1,7 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { PrismaService } from '@/framework/prisma/prisma.service';
-import { JwtPayloadDto } from '@/core/dtos';
+import { PrismaService } from '@/common/prisma/prisma.service';
+import { JwtPayloadDto } from './dto/auth.dto';
 import crypto from 'crypto';
 
 @Injectable()

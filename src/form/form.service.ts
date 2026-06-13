@@ -1,15 +1,17 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
-import { PrismaService } from '@/framework/prisma/prisma.service';
+import { PrismaService } from '@/common/prisma/prisma.service';
 import {
   AnswerProgressDto,
   AnswerResponseDto,
+  FormQuestionResponseDto,
+  NextQuestionDataDto,
+} from './dto/form.dto';
+import {
   DiscResultDto,
   DiscScoresDto,
   AnswerDetailDto,
   CategoryScoreDto,
-  FormQuestionResponseDto,
-  NextQuestionDataDto,
-} from '@/core/dtos';
+} from './dto/disc-result.dto';
 import { Form } from '../../generated/prisma/client';
 
 @Injectable()

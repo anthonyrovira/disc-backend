@@ -16,18 +16,19 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import { JwtGuard, OptionalJwtGuard } from '@/auth/guard';
+import { JwtGuard } from '@/auth/guard';
+import { OptionalJwtGuard } from '@/common/guards';
 import { FormService } from './form.service';
-import { GetUser } from '@/user/decorator';
+import { GetUser } from '@/user';
 import {
   AnswerResponseDto,
-  DiscResultDto,
   FormQuestionResponseDto,
   InitFormDto,
   SubmitAnswerDto,
   UpdateAnswerDto,
-  UserDto,
-} from '@/core/dtos';
+} from './dto/form.dto';
+import { DiscResultDto } from './dto/disc-result.dto';
+import { UserDto } from '@/user/dto/user.dto';
 import { Form } from '../../generated/prisma/client';
 
 @ApiTags('Form')

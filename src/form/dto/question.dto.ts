@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Option } from '../option/option.dto';
+import { Option } from './option.dto';
 
 export class QuestionResponseDto {
   @ApiProperty({

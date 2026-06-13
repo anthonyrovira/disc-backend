@@ -1,6 +1,6 @@
 import { Test } from '@nestjs/testing';
 import { FormService } from './form.service';
-import { PrismaService } from '@/framework/prisma/prisma.service';
+import { PrismaService } from '@/common/prisma/prisma.service';
 
 describe('FormService', () => {
   let service: FormService;

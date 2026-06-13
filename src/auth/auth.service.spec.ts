@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { PrismaService } from '@/framework/prisma/prisma.service';
+import { PrismaService } from '@/common/prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import { ForbiddenException, InternalServerErrorException, Logger } from '@nestjs/common';
 import * as argon from 'argon2';

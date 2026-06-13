@@ -16,10 +16,10 @@ import {
   AuthRequestDto,
   AuthResponseDto,
   RefreshTokenRequestDto,
-} from '@/core/dtos';
+} from './dto/auth.dto';
 import { JwtGuard } from './guard';
-import { GetUser } from '@/user/decorator';
-import { UserDto } from '@/core/dtos';
+import { GetUser } from '@/user';
+import { UserDto } from '@/user/dto/user.dto';
 
 @ApiTags('Authentication')
 @Controller('auth')

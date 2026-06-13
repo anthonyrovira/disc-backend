@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsNotEmpty, IsString, IsUUID } from 'class-validator';
-import { DiscResultDto } from '@/core/dtos/disc/disc-result.dto';
+import { DiscResultDto } from './disc-result.dto';
 
 export class InitFormDto {
   @ApiProperty({ description: 'The form name', example: 'super_test' })

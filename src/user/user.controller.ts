@@ -5,9 +5,9 @@ import {
   ApiOperation,
   ApiTags,
 } from '@nestjs/swagger';
-import { UserDto } from '@/core/dtos';
+import { UserDto } from './dto/user.dto';
 import { JwtGuard } from '@/auth/guard';
-import { GetUser } from './decorator';
+import { GetUser } from './user.decorator';
 import { UserService } from './user.service';
 
 @UseGuards(JwtGuard)

@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { FormController } from './form.controller';
 import { FormService } from './form.service';
-import { InitFormDto } from '@/core/dtos';
+import { InitFormDto } from './dto/form.dto';
 
 describe('FormController', () => {
   let controller: FormController;

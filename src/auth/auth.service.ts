@@ -5,8 +5,8 @@ import {
   InternalServerErrorException,
   Logger,
 } from '@nestjs/common';
-import { AuthRequestDto, AuthResponseDto, JwtPayloadDto } from '@/core/dtos';
-import { PrismaService } from '@/framework/prisma/prisma.service';
+import { AuthRequestDto, AuthResponseDto, JwtPayloadDto } from './dto/auth.dto';
+import { PrismaService } from '@/common/prisma/prisma.service';
 import * as argon from 'argon2';
 import { JwtService } from '@nestjs/jwt';
 import { RefreshTokenService } from './refresh-token.service';

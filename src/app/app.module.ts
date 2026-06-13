@@ -2,8 +2,7 @@ import { Module } from '@nestjs/common';
 import { ScheduleModule } from '@nestjs/schedule';
 import { AppService } from './app.service';
 import { ConfigModule } from '@nestjs/config';
-import { PrismaModule } from '../framework/prisma/prisma.module';
-import { QuestionModule } from '../question/question.module';
+import { PrismaModule } from '../common/prisma/prisma.module';
 import { AuthModule } from '@/auth';
 import { UserModule } from '@/user';
 import { AppController } from '.';
@@ -16,7 +15,6 @@ import { FormModule } from '@/form/form.module';
     AuthModule,
     UserModule,
     FormModule,
-    QuestionModule,
     PrismaModule,
   ],
   controllers: [AppController],
