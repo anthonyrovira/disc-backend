@@ -12,6 +12,8 @@ import {
   AnswerDetailDto,
   CategoryScoreDto,
 } from './dto/disc-result.dto';
+import { buildProfileData, buildSynergies } from './data/profile-builder';
+import type { DiscDim } from './data/disc-profile-data';
 import { Form } from '../../generated/prisma/client';
 
 @Injectable()
@@ -258,7 +260,7 @@ export class FormService {
     const categoryMap = new Map<string, DiscScoresDto>();
 
     for (const answer of form.answers) {
-      const dimension = answer.Option.dimension as 'D' | 'I' | 'S' | 'C';
+      const dimension = answer.Option.dimension as DiscDim;
       const cat = answer.Question.category ?? 'Autre';
       scores[dimension]++;
 
@@ -277,7 +279,7 @@ export class FormService {
       });
     }
 
-    const sorted = (['D', 'I', 'S', 'C'] as ('D' | 'I' | 'S' | 'C')[]).sort(
+    const sorted = (['D', 'I', 'S', 'C'] as DiscDim[]).sort(
       (a, b) => scores[b] - scores[a],
     );
 
@@ -285,7 +287,6 @@ export class FormService {
     const secondary = scores[sorted[1]] > 0 ? sorted[1] : null;
 
     const gap = scores[primary] - (secondary ? scores[secondary] : 0);
-    const profile = secondary && gap < 2 ? `${primary}${secondary}` : primary;
 
     const categoryScores: CategoryScoreDto[] = [];
     for (const [category, catScores] of categoryMap) {
@@ -295,7 +296,7 @@ export class FormService {
       categoryScores.push({
         category,
         scores: catScores,
-        dominant: dims[0][1] > 0 ? (dims[0][0] as 'D' | 'I' | 'S' | 'C') : 'D',
+        dominant: dims[0][1] > 0 ? (dims[0][0] as DiscDim) : 'D',
         total,
       });
     }
@@ -304,7 +305,8 @@ export class FormService {
       scores,
       primary,
       secondary,
-      profile,
+      profile: buildProfileData(primary, secondary, gap),
+      synergies: buildSynergies(primary),
       total: form.answers.length,
       answers,
       categoryScores,

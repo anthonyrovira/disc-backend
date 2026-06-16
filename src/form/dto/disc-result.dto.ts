@@ -2,6 +2,51 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 type DiscDim = 'D' | 'I' | 'S' | 'C';
 
+export class StrengthPitfallDto {
+  @ApiProperty({ description: 'Titre de la force ou de l\'axe d\'amélioration', example: 'Décisif(ve)' })
+  title: string;
+
+  @ApiProperty({ description: 'Description détaillée', example: 'Vous prenez des décisions rapidement et assumez pleinement vos choix.' })
+  text: string;
+}
+
+export class DiscProfileDataDto {
+  @ApiProperty({ description: 'Designation commerciale/psychologique du profil', example: 'Le Réalisateur Persévérant' })
+  title: string;
+
+  @ApiProperty({ description: 'Description narrative globale et comportementale', example: 'Vous combinez force d\'action et constance...' })
+  description: string;
+
+  @ApiProperty({ description: 'Mots-clés ou étiquettes du profil', type: [String], isArray: true, example: ['Pragmatique', 'Fiable'] })
+  tags: string[];
+
+  @ApiProperty({ description: 'Forces majeures du profil', type: [StrengthPitfallDto], isArray: true })
+  strengths: StrengthPitfallDto[];
+
+  @ApiProperty({ description: 'Pièges ou axes d\'amélioration du profil', type: [StrengthPitfallDto], isArray: true })
+  pitfalls: StrengthPitfallDto[];
+
+  @ApiProperty({ description: 'Conseils pour l\'entourage : comment travailler avec l\'utilisateur', type: [String], isArray: true })
+  howToCommunicateWithMe: string[];
+}
+
+export class DiscSynergyDto {
+  @ApiProperty({ description: 'La dimension cible de la synergie', example: 'I' })
+  targetDimension: DiscDim;
+
+  @ApiProperty({ description: 'Nom de la dimension cible', example: 'Influence' })
+  targetLabel: string;
+
+  @ApiProperty({ description: 'Points de concordance naturelle', example: 'Vous partagez un rythme rapide...' })
+  concordance: string;
+
+  @ApiProperty({ description: 'Points de friction ou de discordance potentiels', example: 'Vous cherchez des résultats concrets...' })
+  discordance: string;
+
+  @ApiProperty({ description: 'Guide de communication pratique en quelques points', type: [String], isArray: true })
+  communicationGuide: string[];
+}
+
 export class AnswerDetailDto {
   @ApiProperty({ description: 'The question id', example: 'uuid-1' })
   questionId: string;
@@ -60,8 +105,11 @@ export class DiscResultDto {
   @ApiProperty({ description: 'Secondary DISC dimension', example: 'I', nullable: true })
   secondary: DiscDim | null;
 
-  @ApiProperty({ description: 'Profile code', example: 'Di' })
-  profile: string;
+  @ApiProperty({ description: 'Profil DISC enrichi (données textuelles, forces, axes d\'amélioration, communication)', type: DiscProfileDataDto })
+  profile: DiscProfileDataDto;
+
+  @ApiProperty({ description: 'Synergies avec les autres dimensions DISC', type: [DiscSynergyDto], isArray: true })
+  synergies: DiscSynergyDto[];
 
   @ApiProperty({ description: 'Total number of answers', example: 18 })
   total: number;
