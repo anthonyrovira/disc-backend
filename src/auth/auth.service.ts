@@ -5,6 +5,7 @@ import {
   InternalServerErrorException,
   Logger,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { AuthRequestDto, AuthResponseDto, JwtPayloadDto } from './dto/auth.dto';
 import { PrismaService } from '@/common/prisma/prisma.service';
 import * as argon from 'argon2';
@@ -17,6 +18,7 @@ export class AuthService {
     private prisma: PrismaService,
     private jwt: JwtService,
     private refreshTokenService: RefreshTokenService,
+    private config: ConfigService,
   ) {}
 
   private readonly logger = new Logger(AuthService.name);
@@ -120,7 +122,7 @@ export class AuthService {
     const payload: JwtPayloadDto = { sub: userId, email };
     return this.jwt.signAsync(payload, {
       expiresIn: '15m',
-      secret: process.env.JWT_SECRET,
+      secret: this.config.get('JWT_SECRET'),
     });
   }
 }

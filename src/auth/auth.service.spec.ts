@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '@/common/prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import { ForbiddenException, InternalServerErrorException, Logger } from '@nestjs/common';
@@ -17,6 +18,10 @@ describe('AuthService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuthService,
+        {
+          provide: ConfigService,
+          useValue: { get: jest.fn().mockReturnValue('test-secret') },
+        },
         {
           provide: PrismaService,
           useValue: {
@@ -70,7 +75,7 @@ describe('AuthService', () => {
       expect(prismaService.user.create).toHaveBeenCalled();
       expect(jwtService.signAsync).toHaveBeenCalledWith(
         { sub: mockUser.id, email: mockUser.email },
-        { expiresIn: '15m', secret: process.env.JWT_SECRET },
+        { expiresIn: '15m', secret: 'test-secret' },
       );
       expect(refreshTokenService.generate).toHaveBeenCalledWith(mockUser.id);
     });
@@ -126,7 +131,7 @@ describe('AuthService', () => {
       });
       expect(jwtService.signAsync).toHaveBeenCalledWith(
         { sub: mockUser.id, email: mockUser.email },
-        { expiresIn: '15m', secret: process.env.JWT_SECRET },
+        { expiresIn: '15m', secret: 'test-secret' },
       );
       expect(refreshTokenService.generate).toHaveBeenCalledWith(mockUser.id);
     });

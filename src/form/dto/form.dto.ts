@@ -38,7 +38,7 @@ export class NextQuestionDataDto {
   @ApiProperty({ description: 'Question content', example: "Concernant votre poignée de main :" })
   content: string;
 
-  @ApiProperty({ description: 'Available options', type: [OptionResponseDto] })
+  @ApiProperty({ description: 'Available options', type: [OptionResponseDto], isArray: true })
   options: OptionResponseDto[];
 }
 
@@ -90,7 +90,7 @@ export class FormQuestionResponseDto {
   @ApiProperty({ description: 'Question content' })
   questionContent: string;
 
-  @ApiProperty({ type: [OptionResponseDto] })
+  @ApiProperty({ type: [OptionResponseDto], isArray: true })
   options: OptionResponseDto[];
 
   @ApiPropertyOptional({ description: 'Current selected option value', example: '01_A' })

@@ -1,4 +1,5 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '@/common/prisma/prisma.service';
 import { JwtPayloadDto } from './dto/auth.dto';
@@ -9,6 +10,7 @@ export class RefreshTokenService {
   constructor(
     private prisma: PrismaService,
     private jwt: JwtService,
+    private config: ConfigService,
   ) {}
 
   private hashToken(token: string): string {
@@ -55,7 +57,7 @@ export class RefreshTokenService {
     const payload: JwtPayloadDto = { sub: stored.User.id, email: stored.User.email };
     const access_token = await this.jwt.signAsync(payload, {
       expiresIn: '15m',
-      secret: process.env.JWT_SECRET,
+      secret: this.config.get('JWT_SECRET'),
     });
 
     return { access_token, refresh_token: newRawToken, expires_in: 900 };

@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 type DiscDim = 'D' | 'I' | 'S' | 'C';
 
@@ -9,7 +9,7 @@ export class AnswerDetailDto {
   @ApiProperty({ description: 'The question content', example: "Concernant votre poignée de main :" })
   questionContent: string;
 
-  @ApiProperty({ description: 'The question category', example: 'Communication & Expression' })
+  @ApiPropertyOptional({ description: 'The question category', example: 'Communication & Expression' })
   category?: string;
 
   @ApiProperty({ description: 'The selected option value', example: '01_A' })
@@ -66,9 +66,9 @@ export class DiscResultDto {
   @ApiProperty({ description: 'Total number of answers', example: 18 })
   total: number;
 
-  @ApiProperty({ description: 'List of answers with dimension details', type: [AnswerDetailDto] })
+  @ApiProperty({ description: 'List of answers with dimension details', type: [AnswerDetailDto], isArray: true })
   answers: AnswerDetailDto[];
 
-  @ApiProperty({ description: 'Scores broken down by question category', type: [CategoryScoreDto] })
+  @ApiProperty({ description: 'Scores broken down by question category', type: [CategoryScoreDto], isArray: true })
   categoryScores: CategoryScoreDto[];
 }
