@@ -11,6 +11,7 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ThrottlerGuard } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import {
   AuthRequestDto,
@@ -21,6 +22,7 @@ import { JwtGuard } from './guard';
 import { GetUser } from '@/user';
 import { UserDto } from '@/user/dto/user.dto';
 
+@UseGuards(ThrottlerGuard)
 @ApiTags('Authentication')
 @Controller('auth')
 export class AuthController {
@@ -55,6 +57,7 @@ export class AuthController {
   @UseGuards(JwtGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Logout and revoke all refresh tokens' })
+  @ApiResponse({ status: HttpStatus.NO_CONTENT, description: 'Logged out successfully' })
   @Post('logout')
   async logout(@GetUser() user: UserDto): Promise<void> {
     await this.authService.logout(user.id);
@@ -63,6 +66,7 @@ export class AuthController {
   @Get('google')
   @UseGuards(AuthGuard('google'))
   @ApiOperation({ summary: 'Login with Google' })
+  @ApiResponse({ status: 302, description: 'Redirects to Google' })
   async googleAuth(): Promise<void> {
     // Redirects to Google — never called
   }
@@ -70,6 +74,7 @@ export class AuthController {
   @Get('google/callback')
   @UseGuards(AuthGuard('google'))
   @ApiOperation({ summary: 'Google OAuth callback' })
+  @ApiResponse({ status: 302, description: 'Redirects after Google login' })
   async googleAuthRedirect(
     @Req() req: any,
     @Res() res: any,
