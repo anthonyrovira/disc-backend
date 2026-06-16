@@ -26,6 +26,7 @@ import {
   InitFormDto,
   SubmitAnswerDto,
   UpdateAnswerDto,
+  UpdateFormNameDto,
 } from './dto/form.dto';
 import { DiscResultDto } from './dto/disc-result.dto';
 import { UserDto } from '@/user/dto/user.dto';
@@ -127,6 +128,19 @@ export class FormController {
     @GetUser() user: UserDto,
   ): Promise<void> {
     return this.formService.deleteForm(id, user.id);
+  }
+
+  @UseGuards(JwtGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Rename a form' })
+  @ApiResponse({ status: 200, description: 'Form renamed successfully' })
+  @Patch(':id/name')
+  async updateFormName(
+    @Param('id') id: string,
+    @GetUser() user: UserDto,
+    @Body() dto: UpdateFormNameDto,
+  ): Promise<Form> {
+    return this.formService.updateFormName(id, user.id, dto.name);
   }
 
   @ApiOperation({ summary: 'Submit an answer for a question' })

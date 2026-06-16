@@ -27,7 +27,10 @@ export class OptionResponseDto {
   @ApiProperty({ description: 'The option value', example: '01_A' })
   value: string;
 
-  @ApiProperty({ description: 'The option content', example: 'Elle est ferme et plutôt appuyée.' })
+  @ApiProperty({
+    description: 'The option content',
+    example: 'Elle est ferme et plutôt appuyée.',
+  })
   content: string;
 }
 
@@ -35,10 +38,17 @@ export class NextQuestionDataDto {
   @ApiProperty({ description: 'Question ID', example: 'uuid-1' })
   id: string;
 
-  @ApiProperty({ description: 'Question content', example: "Concernant votre poignée de main :" })
+  @ApiProperty({
+    description: 'Question content',
+    example: 'Concernant votre poignée de main :',
+  })
   content: string;
 
-  @ApiProperty({ description: 'Available options', type: [OptionResponseDto], isArray: true })
+  @ApiProperty({
+    description: 'Available options',
+    type: [OptionResponseDto],
+    isArray: true,
+  })
   options: OptionResponseDto[];
 }
 
@@ -83,6 +93,13 @@ export class UpdateAnswerDto {
   optionValue: string;
 }
 
+export class UpdateFormNameDto {
+  @ApiProperty({ description: 'Nouveau nom du test', example: 'Mon test DISC #1' })
+  @IsString()
+  @IsNotEmpty()
+  name: string;
+}
+
 export class FormQuestionResponseDto {
   @ApiProperty({ description: 'Question ID', example: 'uuid-1' })
   questionId: string;
@@ -93,7 +110,10 @@ export class FormQuestionResponseDto {
   @ApiProperty({ type: [OptionResponseDto], isArray: true })
   options: OptionResponseDto[];
 
-  @ApiPropertyOptional({ description: 'Current selected option value', example: '01_A' })
+  @ApiPropertyOptional({
+    description: 'Current selected option value',
+    example: '01_A',
+  })
   currentAnswer?: string;
 }
 
@@ -101,8 +121,9 @@ export class AnswerResponseDto {
   @ApiProperty({ description: 'The progress after this answer' })
   progress: AnswerProgressDto;
 
-  @ApiPropertyOptional({ type: DiscResultDto, description: 'DISC result if form is completed' })
+  @ApiPropertyOptional({
+    type: DiscResultDto,
+    description: 'DISC result if form is completed',
+  })
   result?: DiscResultDto;
 }
-
-export type FormNames = 'disc_form';

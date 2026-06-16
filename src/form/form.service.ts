@@ -313,6 +313,20 @@ export class FormService {
     };
   }
 
+  async updateFormName(formId: string, userId: string, name: string): Promise<Form> {
+    const form = await this.prisma.form.findUnique({ where: { id: formId } });
+    if (!form) {
+      throw new NotFoundException(`Form with ID ${formId} not found`);
+    }
+    if (form.user_id !== userId) {
+      throw new NotFoundException(`Form with ID ${formId} not found`);
+    }
+    return this.prisma.form.update({
+      where: { id: formId },
+      data: { name, updated_at: new Date() },
+    });
+  }
+
   async deleteForm(formId: string, userId: string): Promise<void> {
     const form = await this.prisma.form.findUnique({ where: { id: formId } });
     if (!form) {
