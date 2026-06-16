@@ -302,6 +302,7 @@ export class FormService {
     }
 
     return {
+      name: form.name,
       scores,
       primary,
       secondary,

@@ -96,6 +96,9 @@ export class CategoryScoreDto {
 }
 
 export class DiscResultDto {
+  @ApiProperty({ description: 'Form name', example: 'Mon test DISC' })
+  name: string;
+
   @ApiProperty({ description: 'Scores per dimension' })
   scores: DiscScoresDto;
 
