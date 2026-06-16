@@ -8,17 +8,21 @@ import {
   Patch,
   Post,
   Put,
+  Res,
   UseGuards,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiOperation,
+  ApiProduces,
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
+import type { Response } from 'express';
 import { JwtGuard } from '@/auth/guard';
 import { OptionalJwtGuard } from '@/common/guards';
 import { FormService } from './form.service';
+import { PdfGeneratorService } from './pdf/pdf-generator.service';
 import { GetUser } from '@/user';
 import {
   AnswerResponseDto,
@@ -36,7 +40,10 @@ import { Form } from '../../generated/prisma/client';
 @UseGuards(OptionalJwtGuard)
 @Controller('form')
 export class FormController {
-  constructor(private readonly formService: FormService) {}
+  constructor(
+    private readonly formService: FormService,
+    private readonly pdfGeneratorService: PdfGeneratorService,
+  ) {}
 
   @UseGuards(JwtGuard)
   @ApiBearerAuth()
@@ -77,6 +84,27 @@ export class FormController {
   @Get(':id/result')
   async getDiscResult(@Param('id') id: string): Promise<DiscResultDto> {
     return this.formService.getDiscResult(id);
+  }
+
+  @ApiOperation({ summary: 'Download DISC result as PDF' })
+  @ApiProduces('application/pdf')
+  @ApiResponse({
+    status: 200,
+    description: 'PDF file downloaded successfully',
+  })
+  @Get(':id/pdf')
+  async downloadPdf(@Param('id') id: string, @Res() res: Response): Promise<void> {
+    const result = await this.formService.getDiscResult(id);
+    const profileCode = result.secondary
+      ? `${result.primary}${result.secondary}`
+      : result.primary;
+    const filename = `Rapport_DISC_${profileCode}_${id}.pdf`;
+    const pdfBuffer = await this.pdfGeneratorService.generatePdf(result);
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename="${filename}"`,
+    });
+    res.end(pdfBuffer);
   }
 
   @ApiOperation({ summary: 'Get a form by id' })
