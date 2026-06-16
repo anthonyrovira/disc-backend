@@ -17,16 +17,16 @@ export class DiscProfileDataDto {
   @ApiProperty({ description: 'Description narrative globale et comportementale', example: 'Vous combinez force d\'action et constance...' })
   description: string;
 
-  @ApiProperty({ description: 'Mots-clés ou étiquettes du profil', type: [String], isArray: true, example: ['Pragmatique', 'Fiable'] })
+  @ApiProperty({ description: 'Mots-clés ou étiquettes du profil', type: String, isArray: true, example: ['Pragmatique', 'Fiable'] })
   tags: string[];
 
-  @ApiProperty({ description: 'Forces majeures du profil', type: [StrengthPitfallDto], isArray: true })
+  @ApiProperty({ description: 'Forces majeures du profil', type: StrengthPitfallDto, isArray: true })
   strengths: StrengthPitfallDto[];
 
-  @ApiProperty({ description: 'Pièges ou axes d\'amélioration du profil', type: [StrengthPitfallDto], isArray: true })
+  @ApiProperty({ description: 'Pièges ou axes d\'amélioration du profil', type: StrengthPitfallDto, isArray: true })
   pitfalls: StrengthPitfallDto[];
 
-  @ApiProperty({ description: 'Conseils pour l\'entourage : comment travailler avec l\'utilisateur', type: [String], isArray: true })
+  @ApiProperty({ description: 'Conseils pour l\'entourage : comment travailler avec l\'utilisateur', type: String, isArray: true })
   howToCommunicateWithMe: string[];
 }
 
@@ -43,7 +43,7 @@ export class DiscSynergyDto {
   @ApiProperty({ description: 'Points de friction ou de discordance potentiels', example: 'Vous cherchez des résultats concrets...' })
   discordance: string;
 
-  @ApiProperty({ description: 'Guide de communication pratique en quelques points', type: [String], isArray: true })
+  @ApiProperty({ description: 'Guide de communication pratique en quelques points', type: String, isArray: true })
   communicationGuide: string[];
 }
 
@@ -108,15 +108,15 @@ export class DiscResultDto {
   @ApiProperty({ description: 'Profil DISC enrichi (données textuelles, forces, axes d\'amélioration, communication)', type: DiscProfileDataDto })
   profile: DiscProfileDataDto;
 
-  @ApiProperty({ description: 'Synergies avec les autres dimensions DISC', type: [DiscSynergyDto], isArray: true })
+  @ApiProperty({ description: 'Synergies avec les autres dimensions DISC', type: DiscSynergyDto, isArray: true })
   synergies: DiscSynergyDto[];
 
   @ApiProperty({ description: 'Total number of answers', example: 18 })
   total: number;
 
-  @ApiProperty({ description: 'List of answers with dimension details', type: [AnswerDetailDto], isArray: true })
+  @ApiProperty({ description: 'List of answers with dimension details', type: AnswerDetailDto, isArray: true })
   answers: AnswerDetailDto[];
 
-  @ApiProperty({ description: 'Scores broken down by question category', type: [CategoryScoreDto], isArray: true })
+  @ApiProperty({ description: 'Scores broken down by question category', type: CategoryScoreDto, isArray: true })
   categoryScores: CategoryScoreDto[];
 }
