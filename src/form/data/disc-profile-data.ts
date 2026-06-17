@@ -47,7 +47,7 @@ export const BLENDED_TITLES: Record<string, string> = {
 
 export const SINGLE_PROFILES: Record<DiscDim, DiscProfileEntry> = {
   D: {
-    title: 'Le Décideur',
+    title: 'Le Capitaine',
     shortLabel: 'Dominant',
     description:
       'Vous êtes direct(e), ferme et orienté(e) vers les résultats. Vous aimez les défis et prenez les choses en main avec confiance.',
@@ -91,7 +91,7 @@ export const SINGLE_PROFILES: Record<DiscDim, DiscProfileEntry> = {
     ],
   },
   I: {
-    title: "L'Influent",
+    title: 'Le Motivateur',
     shortLabel: 'Influent',
     description:
       'Vous êtes extraverti(e), enthousiaste et orienté(e) vers les autres. Vous inspirez votre entourage et prospérez dans un environnement collaboratif.',
@@ -135,7 +135,7 @@ export const SINGLE_PROFILES: Record<DiscDim, DiscProfileEntry> = {
     ],
   },
   S: {
-    title: 'Le Pilier',
+    title: 'Le Supporter',
     shortLabel: 'Stable',
     description:
       "Vous êtes calme, loyal(e) et tourné(e) vers l'équipe. Vous valorisez la stabilité et créez l'harmonie au sein des groupes.",
@@ -179,7 +179,7 @@ export const SINGLE_PROFILES: Record<DiscDim, DiscProfileEntry> = {
     ],
   },
   C: {
-    title: "L'Expert",
+    title: "L'Analyste",
     shortLabel: 'Conforme',
     description:
       'Vous êtes analytique, précis(e) et méthodique. Vous recherchez la qualité et la précision dans tout ce que vous faites.',
