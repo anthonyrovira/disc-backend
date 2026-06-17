@@ -5,7 +5,19 @@ generator client {
 }
 
 datasource db {
-    provider = "sqlite"
+    provider = "postgresql"
+}
+
+enum DiscDimension {
+    D
+    I
+    S
+    C
+}
+
+enum FormStatus {
+    in_progress
+    completed
 }
 
 model User {
@@ -29,12 +41,14 @@ model Question {
 }
 
 model Option {
-    value      String        @unique
+    value      String          @unique
     content    String
-    dimension  String
-    Question   Question      @relation(fields: [questionId], references: [id])
+    dimension  DiscDimension
+    Question   Question        @relation(fields: [questionId], references: [id])
     questionId String
     Answer     Answer[]
+
+    @@index([questionId])
 }
 
 model RefreshToken {
@@ -52,13 +66,15 @@ model RefreshToken {
 model Form {
     id         String         @id @default(uuid())
     name       String         @default("disc_form")
-    status     String         @default("in_progress")
+    status     FormStatus     @default(in_progress)
     User       User?          @relation(fields: [user_id], references: [id])
     user_id    String?
     answers    Answer[]
     questions  FormQuestion[]
     created_at DateTime?      @default(now())
     updated_at DateTime?
+
+    @@index([user_id])
 }
 
 model FormQuestion {
@@ -71,6 +87,7 @@ model FormQuestion {
     answered   Boolean  @default(false)
 
     @@unique([formId, questionId])
+    @@index([questionId])
 }
 
 model Answer {
@@ -84,4 +101,7 @@ model Answer {
     updated_at  DateTime? @default(now())
 
     @@unique([form_id, question_id])
+    @@index([question_id])
+    @@index([optionValue])
+    @@index([form_id])
 }

@@ -1,21 +1,19 @@
 import 'dotenv/config';
-import { discQuestions } from '../.seed-sources/disc-data';
+import { PrismaPg } from '@prisma/adapter-pg';
+import { PrismaClient } from '../generated/prisma/client';
+import { discQuestions } from './.seed-sources/disc-data';
 
-import { PrismaClient } from '../../generated/prisma/client';
-import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3';
-
-const prisma = new PrismaClient({
-  adapter: new PrismaBetterSqlite3({ url: process.env.DATABASE_URL }),
-});
+const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
+const prisma = new PrismaClient({ adapter });
 
 async function main() {
-  await prisma.$executeRawUnsafe('DELETE FROM Answer');
-  await prisma.$executeRawUnsafe('DELETE FROM FormQuestion');
-  await prisma.$executeRawUnsafe('DELETE FROM Form');
-  await prisma.$executeRawUnsafe('DELETE FROM RefreshToken');
-  await prisma.$executeRawUnsafe('DELETE FROM Option');
-  await prisma.$executeRawUnsafe('DELETE FROM Question');
-  await prisma.$executeRawUnsafe('DELETE FROM User');
+  await prisma.$executeRawUnsafe('DELETE FROM "Answer"');
+  await prisma.$executeRawUnsafe('DELETE FROM "FormQuestion"');
+  await prisma.$executeRawUnsafe('DELETE FROM "Form"');
+  await prisma.$executeRawUnsafe('DELETE FROM "RefreshToken"');
+  await prisma.$executeRawUnsafe('DELETE FROM "Option"');
+  await prisma.$executeRawUnsafe('DELETE FROM "Question"');
+  await prisma.$executeRawUnsafe('DELETE FROM "User"');
   console.log('Tables cleared');
 
   for (const question of discQuestions) {
