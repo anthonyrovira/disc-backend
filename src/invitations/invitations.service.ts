@@ -187,6 +187,29 @@ export class InvitationsService {
     });
   }
 
+  async revoke(token: string, userId: string): Promise<void> {
+    const invitation = await this.prisma.invitation.findUnique({
+      where: { token },
+    });
+
+    if (!invitation) {
+      throw new NotFoundException('Invitation not found');
+    }
+
+    if (invitation.invitedByUserId !== userId) {
+      throw new ForbiddenException('You can only revoke your own invitations');
+    }
+
+    if (invitation.status !== InvitationStatus.PENDING) {
+      throw new ConflictException('Only pending invitations can be revoked');
+    }
+
+    await this.prisma.invitation.update({
+      where: { id: invitation.id },
+      data: { status: InvitationStatus.REVOKED },
+    });
+  }
+
   async accept(
     token: string,
     userId: string,

@@ -117,4 +117,16 @@ export class OrganizationsController {
   ): Promise<DashboardResultDto> {
     return this.orgService.getDashboardResults(id);
   }
+
+  @Delete(':id')
+  @UseGuards(JwtGuard, OrganizationRolesGuard)
+  @OrgRoles(OrganizationRole.OWNER)
+  @ApiBearerAuth()
+  @ApiNoContentResponse()
+  @ApiOperation({ summary: 'Delete the organization and all its data' })
+  @ApiParam({ name: 'id', description: 'Organization ID' })
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async delete(@Param('id') id: string): Promise<void> {
+    await this.orgService.deleteOrganization(id);
+  }
 }

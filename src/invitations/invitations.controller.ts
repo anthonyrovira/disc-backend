@@ -75,4 +75,18 @@ export class InvitationsController {
   ): Promise<void> {
     await this.invitationsService.accept(token, user.id, user.email);
   }
+
+  @Post(':token/revoke')
+  @UseGuards(JwtGuard)
+  @ApiBearerAuth()
+  @ApiOkResponse()
+  @ApiOperation({ summary: 'Revoke a pending invitation' })
+  @ApiParam({ name: 'token', description: 'Invitation token' })
+  @HttpCode(HttpStatus.OK)
+  async revoke(
+    @GetUser() user: UserDto,
+    @Param('token') token: string,
+  ): Promise<void> {
+    await this.invitationsService.revoke(token, user.id);
+  }
 }
