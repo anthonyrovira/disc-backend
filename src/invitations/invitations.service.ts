@@ -38,16 +38,16 @@ export class InvitationsService {
       return this.createReferral(userId, dto);
     }
 
-    return this.createTeamInvitation(userId, dto);
+    return this.createOrgInvitation(userId, dto);
   }
 
-  private async createTeamInvitation(
+  private async createOrgInvitation(
     userId: string,
     dto: CreateInvitationDto,
   ): Promise<InvitationResponseDto> {
     if (!dto.organizationId) {
       throw new ForbiddenException(
-        'organizationId is required for TEAM_MEMBER invitations',
+        'organizationId is required for TEAM_MEMBER and CANDIDATE invitations',
       );
     }
 
@@ -257,10 +257,12 @@ export class InvitationsService {
         },
       });
 
-      if (
-        invitation.type === InvitationType.TEAM_MEMBER &&
-        invitation.organizationId
-      ) {
+      if (invitation.organizationId) {
+        const role =
+          invitation.type === InvitationType.CANDIDATE
+            ? OrganizationRole.CANDIDATE
+            : OrganizationRole.MEMBER;
+
         const existingMembership = await tx.organizationMembership.findUnique({
           where: {
             userId_organizationId: {
@@ -275,7 +277,7 @@ export class InvitationsService {
             data: {
               userId,
               organizationId: invitation.organizationId,
-              role: OrganizationRole.MEMBER,
+              role,
               invitedById: invitation.invitedByUserId,
             },
           });

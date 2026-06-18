@@ -82,7 +82,7 @@ export class OrganizationWithRoleDto {
     enum: OrganizationRole,
     example: 'OWNER',
   })
-  @IsEnum(OrganizationRole, { message: 'Le rôle doit être un rôle valide (OWNER, MANAGER ou MEMBER)' })
+  @IsEnum(OrganizationRole, { message: 'Le rôle doit être un rôle valide (OWNER, MANAGER, MEMBER ou CANDIDATE)' })
   role: OrganizationRole;
 
   constructor(data: {
@@ -126,7 +126,7 @@ export class MemberDto {
     enum: OrganizationRole,
     example: 'MEMBER',
   })
-  @IsEnum(OrganizationRole, { message: 'Le rôle doit être un rôle valide (OWNER, MANAGER ou MEMBER)' })
+  @IsEnum(OrganizationRole, { message: 'Le rôle doit être un rôle valide (OWNER, MANAGER, MEMBER ou CANDIDATE)' })
   role: OrganizationRole;
 
   @ApiProperty({

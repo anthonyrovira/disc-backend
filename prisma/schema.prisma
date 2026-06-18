@@ -24,10 +24,12 @@ enum OrganizationRole {
     OWNER
     MANAGER
     MEMBER
+    CANDIDATE
 }
 
 enum InvitationType {
     TEAM_MEMBER
+    CANDIDATE
     REFERRAL
 }
 

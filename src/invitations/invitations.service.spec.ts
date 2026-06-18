@@ -69,6 +69,15 @@ describe('InvitationsService', () => {
       ).rejects.toThrow(ForbiddenException);
     });
 
+    it('should throw ForbiddenException when CANDIDATE without orgId', async () => {
+      await expect(
+        service.create('user-id', 'owner@acme.com', {
+          email: 'candidate@acme.com',
+          type: InvitationType.CANDIDATE,
+        }),
+      ).rejects.toThrow(ForbiddenException);
+    });
+
     it('should throw ForbiddenException if user is not OWNER/MANAGER', async () => {
       mockPrisma.organizationMembership.findUnique.mockResolvedValue({
         userId: 'user-id',
@@ -331,6 +340,49 @@ describe('InvitationsService', () => {
       expect(
         (mockPrisma.$transaction as jest.Mock).mock.calls[0][0].toString(),
       ).toBeDefined();
+    });
+
+    it('should accept CANDIDATE invitation and create membership with CANDIDATE role', async () => {
+      mockPrisma.invitation.findUnique.mockResolvedValue({
+        ...baseInvitation,
+        type: InvitationType.CANDIDATE,
+      });
+
+      mockPrisma.$transaction.mockImplementation(
+        async (cb: (tx: any) => Promise<void>) => {
+          const tx = {
+            invitation: {
+              update: jest.fn().mockResolvedValue({}),
+            },
+            organizationMembership: {
+              findUnique: jest.fn().mockResolvedValue(null),
+              create: jest.fn().mockResolvedValue({}),
+            },
+          };
+          await cb(tx);
+        },
+      );
+
+      await service.accept(validToken, 'user-id', 'invited@acme.com');
+
+      const tx = mockPrisma.$transaction.mock.calls[0][0];
+      const mockTx = {
+        invitation: { update: jest.fn().mockResolvedValue({}) },
+        organizationMembership: {
+          findUnique: jest.fn().mockResolvedValue(null),
+          create: jest.fn().mockResolvedValue({}),
+        },
+      };
+      await tx(mockTx);
+
+      expect(mockTx.organizationMembership.create).toHaveBeenCalledWith({
+        data: {
+          userId: 'user-id',
+          organizationId: 'org-id',
+          role: OrganizationRole.CANDIDATE,
+          invitedById: 'inviter-id',
+        },
+      });
     });
 
     it('should accept REFERRAL invitation without organization', async () => {

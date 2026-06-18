@@ -25,12 +25,12 @@ export class CreateInvitationDto {
     enum: InvitationType,
     example: 'TEAM_MEMBER',
   })
-  @IsEnum(InvitationType, { message: 'Le type doit être TEAM_MEMBER ou REFERRAL' })
+  @IsEnum(InvitationType, { message: 'Le type doit être TEAM_MEMBER, CANDIDATE ou REFERRAL' })
   type: InvitationType;
 
   @ApiPropertyOptional({
     description:
-      'Organization ID (required for TEAM_MEMBER, ignored for REFERRAL)',
+      'Organization ID (required for TEAM_MEMBER and CANDIDATE, ignored for REFERRAL)',
     example: 'f8e8d1e0-7e6e-11ea-bc55-0242ac130003',
   })
   @IsOptional()
