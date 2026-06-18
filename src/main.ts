@@ -2,7 +2,7 @@ import helmet from 'helmet';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app/app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { ValidationPipe } from '@nestjs/common';
+import { BadRequestException, ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -10,9 +10,18 @@ async function bootstrap() {
   app.enableCors();
   app.useGlobalPipes(
     new ValidationPipe({
+      whitelist: true,
       forbidNonWhitelisted: true,
       forbidUnknownValues: true,
-      whitelist: true,
+      transform: true,
+      transformOptions: { enableImplicitConversion: false },
+      exceptionFactory: (errors) => {
+        const formatted = errors.map((e) => ({
+          field: e.property,
+          message: Object.values(e.constraints ?? {}).join(', '),
+        }));
+        return new BadRequestException({ errors: formatted });
+      },
     }),
   );
 

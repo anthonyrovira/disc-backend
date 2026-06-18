@@ -16,8 +16,8 @@ export class CreateInvitationDto {
     description: 'The email of the person to invite',
     example: 'colleague@acme.com',
   })
-  @IsEmail()
-  @IsNotEmpty()
+  @IsEmail({}, { message: "Format d'email invalide" })
+  @IsNotEmpty({ message: "L'email ne peut pas être vide" })
   email: string;
 
   @ApiProperty({
@@ -25,16 +25,16 @@ export class CreateInvitationDto {
     enum: InvitationType,
     example: 'TEAM_MEMBER',
   })
-  @IsEnum(InvitationType)
+  @IsEnum(InvitationType, { message: 'Le type doit être TEAM_MEMBER ou REFERRAL' })
   type: InvitationType;
 
   @ApiPropertyOptional({
     description:
-      'Organization ID (required for TEAM_MEMBER and EXTERNAL, ignored for REFERRAL)',
+      'Organization ID (required for TEAM_MEMBER, ignored for REFERRAL)',
     example: 'f8e8d1e0-7e6e-11ea-bc55-0242ac130003',
   })
   @IsOptional()
-  @IsUUID()
+  @IsUUID('all', { message: "L'identifiant de l'organisation doit être un UUID valide" })
   organizationId?: string;
 }
 

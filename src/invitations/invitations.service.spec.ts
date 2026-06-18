@@ -69,15 +69,6 @@ describe('InvitationsService', () => {
       ).rejects.toThrow(ForbiddenException);
     });
 
-    it('should throw ForbiddenException when EXTERNAL without orgId', async () => {
-      await expect(
-        service.create('user-id', 'owner@acme.com', {
-          email: 'colleague@acme.com',
-          type: InvitationType.EXTERNAL,
-        }),
-      ).rejects.toThrow(ForbiddenException);
-    });
-
     it('should throw ForbiddenException if user is not OWNER/MANAGER', async () => {
       mockPrisma.organizationMembership.findUnique.mockResolvedValue({
         userId: 'user-id',
@@ -340,42 +331,6 @@ describe('InvitationsService', () => {
       expect(
         (mockPrisma.$transaction as jest.Mock).mock.calls[0][0].toString(),
       ).toBeDefined();
-    });
-
-    it('should accept EXTERNAL invitation without creating membership', async () => {
-      mockPrisma.invitation.findUnique.mockResolvedValue({
-        ...baseInvitation,
-        type: InvitationType.EXTERNAL,
-      });
-
-      mockPrisma.$transaction.mockImplementation(
-        async (cb: (tx: any) => Promise<void>) => {
-          const tx = {
-            invitation: {
-              update: jest.fn().mockResolvedValue({}),
-            },
-            organizationMembership: {
-              findUnique: jest.fn(),
-              create: jest.fn(),
-            },
-          };
-          await cb(tx);
-        },
-      );
-
-      await service.accept(validToken, 'user-id', 'invited@acme.com');
-
-      const tx = mockPrisma.$transaction.mock.calls[0][0];
-      const mockTx = {
-        invitation: { update: jest.fn().mockResolvedValue({}) },
-        organizationMembership: {
-          findUnique: jest.fn(),
-          create: jest.fn(),
-        },
-      };
-      await tx(mockTx);
-
-      expect(mockTx.organizationMembership.create).not.toHaveBeenCalled();
     });
 
     it('should accept REFERRAL invitation without organization', async () => {

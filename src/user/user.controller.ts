@@ -1,11 +1,19 @@
-import { Controller, Delete, Get, HttpCode, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  Patch,
+  UseGuards,
+} from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiResponse,
   ApiOperation,
   ApiTags,
 } from '@nestjs/swagger';
-import { UserDto } from './dto/user.dto';
+import { UserDto, UpdateProfileDto } from './dto/user.dto';
 import { JwtGuard } from '@/auth/guard';
 import { GetUser } from './user.decorator';
 import { UserService } from './user.service';
@@ -22,6 +30,29 @@ export class UserController {
   @Get('me')
   getUserByAccessToken(@GetUser('') user: UserDto) {
     return user;
+  }
+
+  @ApiBearerAuth('bearer')
+  @ApiOperation({
+    summary: 'Mettre à jour le profil de l\'utilisateur connecté',
+  })
+  @ApiResponse({ type: UserDto })
+  @Patch('me')
+  @HttpCode(200)
+  async updateProfile(
+    @GetUser('') user: UserDto,
+    @Body() dto: UpdateProfileDto,
+  ): Promise<UserDto> {
+    const updated = await this.userService.updateProfile(user.id, dto);
+    return new UserDto({
+      id: updated.id,
+      email: updated.email,
+      username: updated.username ?? undefined,
+      firstName: updated.firstName ?? undefined,
+      lastName: updated.lastName ?? undefined,
+      birthDate: updated.birthDate ?? undefined,
+      created_at: updated.created_at ?? undefined,
+    });
   }
 
   @ApiBearerAuth('bearer')

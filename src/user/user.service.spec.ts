@@ -1,3 +1,4 @@
+import { ConflictException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { UserService } from './user.service';
 import { PrismaService } from '@/common/prisma/prisma.service';
@@ -15,6 +16,7 @@ describe('UserService', () => {
           useValue: {
             user: {
               findUnique: jest.fn(),
+              update: jest.fn(),
               delete: jest.fn(),
             },
             form: {
@@ -94,6 +96,92 @@ describe('UserService', () => {
       await expect(service.deleteUser({ id: 'nonexistent' })).rejects.toThrow(
         'User not found',
       );
+    });
+  });
+
+  describe('updateProfile', () => {
+    it('should update all profile fields', async () => {
+      const mockUser = {
+        id: 'uid',
+        email: 'new@example.com',
+        username: 'newuser',
+        firstName: 'John',
+        lastName: 'Doe',
+        birthDate: new Date('1990-05-15'),
+      };
+
+      prisma.user.findUnique = jest.fn().mockResolvedValue(null);
+      prisma.user.update = jest.fn().mockResolvedValue(mockUser);
+
+      const result = await service.updateProfile('uid', {
+        firstName: 'John',
+        lastName: 'Doe',
+        email: 'new@example.com',
+        username: 'newuser',
+        birthDate: '1990-05-15',
+      });
+
+      expect(result).toEqual(mockUser);
+      expect(prisma.user.update).toHaveBeenCalledWith({
+        where: { id: 'uid' },
+        data: {
+          firstName: 'John',
+          lastName: 'Doe',
+          email: 'new@example.com',
+          username: 'newuser',
+          birthDate: new Date('1990-05-15'),
+        },
+      });
+    });
+
+    it('should update only provided fields', async () => {
+      const mockUser = {
+        id: 'uid',
+        email: 'old@example.com',
+        firstName: 'John',
+      };
+
+      prisma.user.update = jest.fn().mockResolvedValue(mockUser);
+
+      const result = await service.updateProfile('uid', {
+        firstName: 'John',
+      });
+
+      expect(result).toEqual(mockUser);
+      expect(prisma.user.update).toHaveBeenCalledWith({
+        where: { id: 'uid' },
+        data: { firstName: 'John' },
+      });
+    });
+
+    it('should throw ConflictException if email is taken', async () => {
+      prisma.user.findUnique = jest.fn().mockResolvedValue({
+        id: 'other-user',
+        email: 'taken@example.com',
+      });
+
+      await expect(
+        service.updateProfile('uid', { email: 'taken@example.com' }),
+      ).rejects.toThrow(ConflictException);
+    });
+
+    it('should allow updating to own email', async () => {
+      const mockUser = {
+        id: 'uid',
+        email: 'mine@example.com',
+      };
+
+      prisma.user.findUnique = jest.fn().mockResolvedValue({
+        id: 'uid',
+        email: 'mine@example.com',
+      });
+      prisma.user.update = jest.fn().mockResolvedValue(mockUser);
+
+      const result = await service.updateProfile('uid', {
+        email: 'mine@example.com',
+      });
+
+      expect(result).toEqual(mockUser);
     });
   });
 });

@@ -17,8 +17,8 @@ export class CreateOrganizationDto {
     description: 'The name of the organization',
     example: 'Acme Corp',
   })
-  @IsString()
-  @IsNotEmpty()
+  @IsString({ message: 'Le nom doit être une chaîne de caractères' })
+  @IsNotEmpty({ message: 'Le nom ne peut pas être vide' })
   name: string;
 }
 
@@ -82,7 +82,7 @@ export class OrganizationWithRoleDto {
     enum: OrganizationRole,
     example: 'OWNER',
   })
-  @IsEnum(OrganizationRole)
+  @IsEnum(OrganizationRole, { message: 'Le rôle doit être un rôle valide (OWNER, MANAGER ou MEMBER)' })
   role: OrganizationRole;
 
   constructor(data: {
@@ -126,7 +126,7 @@ export class MemberDto {
     enum: OrganizationRole,
     example: 'MEMBER',
   })
-  @IsEnum(OrganizationRole)
+  @IsEnum(OrganizationRole, { message: 'Le rôle doit être un rôle valide (OWNER, MANAGER ou MEMBER)' })
   role: OrganizationRole;
 
   @ApiProperty({
@@ -159,7 +159,7 @@ export class UpdateMemberRoleDto {
     enum: [OrganizationRole.MANAGER, OrganizationRole.MEMBER],
     example: 'MANAGER',
   })
-  @IsEnum(OrganizationRole)
+  @IsEnum(OrganizationRole, { message: 'Le rôle doit être MANAGER ou MEMBER' })
   role: OrganizationRole;
 }
 
@@ -168,8 +168,8 @@ export class TransferOwnershipDto {
     description: 'The user ID of the member to become the new OWNER',
     example: 'f8e8d1e0-7e6e-11ea-bc55-0242ac130003',
   })
-  @IsUUID()
-  @IsNotEmpty()
+  @IsUUID('all', { message: "L'identifiant utilisateur doit être un UUID valide" })
+  @IsNotEmpty({ message: "L'identifiant utilisateur ne peut pas être vide" })
   userId: string;
 }
 

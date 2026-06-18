@@ -6,16 +6,16 @@ export class AuthRequestDto {
     description: 'The email address',
     example: 'random.email@test.com',
   })
-  @IsEmail()
-  @IsNotEmpty()
+  @IsEmail({}, { message: "Format d'email invalide" })
+  @IsNotEmpty({ message: "L'email ne peut pas être vide" })
   email: string;
 
   @ApiProperty({
     description: 'The password',
     example: 'password',
   })
-  @IsString()
-  @IsNotEmpty()
+  @IsString({ message: 'Le mot de passe doit être une chaîne de caractères' })
+  @IsNotEmpty({ message: 'Le mot de passe ne peut pas être vide' })
   password: string;
 }
 
@@ -44,8 +44,8 @@ export class RefreshTokenRequestDto {
     description: 'The refresh token',
     example: '4f8c2a1b...',
   })
-  @IsString()
-  @IsNotEmpty()
+  @IsString({ message: 'Le refresh token doit être une chaîne de caractères' })
+  @IsNotEmpty({ message: 'Le refresh token ne peut pas être vide' })
   refresh_token: string;
 }
 

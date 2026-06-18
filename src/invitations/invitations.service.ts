@@ -38,16 +38,16 @@ export class InvitationsService {
       return this.createReferral(userId, dto);
     }
 
-    return this.createTeamOrExternal(userId, dto);
+    return this.createTeamInvitation(userId, dto);
   }
 
-  private async createTeamOrExternal(
+  private async createTeamInvitation(
     userId: string,
     dto: CreateInvitationDto,
   ): Promise<InvitationResponseDto> {
     if (!dto.organizationId) {
       throw new ForbiddenException(
-        'organizationId is required for TEAM_MEMBER and EXTERNAL invitations',
+        'organizationId is required for TEAM_MEMBER invitations',
       );
     }
 

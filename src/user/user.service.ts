@@ -1,10 +1,15 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import {
+  ConflictException,
+  ForbiddenException,
+  Injectable,
+} from '@nestjs/common';
 import { PrismaService } from '@/common/prisma/prisma.service';
 import {
   OrganizationRole,
   Prisma,
   User,
 } from '../../generated/prisma/client';
+import { UpdateProfileDto } from './dto/user.dto';
 
 @Injectable()
 export class UserService {
@@ -89,5 +94,46 @@ export class UserService {
     }
 
     return this.prisma.user.delete({ where });
+  }
+
+  async updateProfile(
+    userId: string,
+    dto: UpdateProfileDto,
+  ): Promise<User> {
+    const data: Prisma.UserUpdateInput = {};
+
+    if (dto.firstName !== undefined) {
+      data.firstName = dto.firstName;
+    }
+    if (dto.lastName !== undefined) {
+      data.lastName = dto.lastName;
+    }
+    if (dto.username !== undefined) {
+      data.username = dto.username;
+    }
+    if (dto.email !== undefined) {
+      const existing = await this.prisma.user.findUnique({
+        where: { email: dto.email },
+      });
+      if (existing && existing.id !== userId) {
+        throw new ConflictException({
+          errors: [
+            {
+              field: 'email',
+              message: 'Cet email est déjà utilisé par un autre compte',
+            },
+          ],
+        });
+      }
+      data.email = dto.email;
+    }
+    if (dto.birthDate !== undefined) {
+      data.birthDate = new Date(dto.birthDate);
+    }
+
+    return this.prisma.user.update({
+      where: { id: userId },
+      data,
+    });
   }
 }
