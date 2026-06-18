@@ -15,6 +15,7 @@ import {
   CreateOrganizationDto,
   MemberDto,
   OrganizationResponseDto,
+  OrganizationWithRoleDto,
   DashboardResultDto,
   MemberResultDto,
 } from './dto/organizations.dto';
@@ -42,6 +43,26 @@ export class OrganizationsService {
     });
 
     return new OrganizationResponseDto(org);
+  }
+
+  async getUserOrganizations(
+    userId: string,
+  ): Promise<OrganizationWithRoleDto[]> {
+    const memberships = await this.prisma.organizationMembership.findMany({
+      where: { userId },
+      include: { organization: true },
+      orderBy: { joinedAt: 'asc' },
+    });
+
+    return memberships.map(
+      (m) =>
+        new OrganizationWithRoleDto({
+          id: m.organization.id,
+          name: m.organization.name,
+          createdAt: m.organization.createdAt,
+          role: m.role,
+        }),
+    );
   }
 
   async findById(organizationId: string): Promise<OrganizationResponseDto> {

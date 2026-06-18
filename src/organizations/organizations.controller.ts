@@ -28,6 +28,7 @@ import { OrganizationsService } from './organizations.service';
 import {
   CreateOrganizationDto,
   OrganizationResponseDto,
+  OrganizationWithRoleDto,
   MemberDto,
   UpdateMemberRoleDto,
   TransferOwnershipDto,
@@ -38,6 +39,17 @@ import {
 @Controller('organizations')
 export class OrganizationsController {
   constructor(private readonly orgService: OrganizationsService) {}
+
+  @Get()
+  @UseGuards(JwtGuard)
+  @ApiBearerAuth()
+  @ApiOkResponse({ type: [OrganizationWithRoleDto] })
+  @ApiOperation({ summary: 'List organizations of the current user' })
+  async getUserOrganizations(
+    @GetUser() user: UserDto,
+  ): Promise<OrganizationWithRoleDto[]> {
+    return this.orgService.getUserOrganizations(user.id);
+  }
 
   @Post()
   @UseGuards(JwtGuard)

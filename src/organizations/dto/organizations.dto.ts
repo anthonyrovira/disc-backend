@@ -53,6 +53,51 @@ export class OrganizationResponseDto {
   }
 }
 
+export class OrganizationWithRoleDto {
+  @ApiProperty({
+    description: 'The unique identifier of the organization',
+    example: 'f8e8d1e0-7e6e-11ea-bc55-0242ac130003',
+  })
+  @Allow()
+  id: string;
+
+  @ApiProperty({
+    description: 'The name of the organization',
+    example: 'Acme Corp',
+  })
+  @Allow()
+  name: string;
+
+  @ApiProperty({
+    description: 'The date when the organization was created',
+    example: '2024-01-15T10:00:00Z',
+  })
+  @Allow()
+  @IsDate()
+  @Type(() => Date)
+  createdAt: Date;
+
+  @ApiProperty({
+    description: 'The role of the current user in this organization',
+    enum: OrganizationRole,
+    example: 'OWNER',
+  })
+  @IsEnum(OrganizationRole)
+  role: OrganizationRole;
+
+  constructor(data: {
+    id: string;
+    name: string;
+    createdAt: Date;
+    role: OrganizationRole;
+  }) {
+    this.id = data.id;
+    this.name = data.name;
+    this.createdAt = data.createdAt;
+    this.role = data.role;
+  }
+}
+
 export class MemberDto {
   @ApiProperty({
     description: 'The user ID',
