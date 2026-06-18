@@ -1,6 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '../../../generated/prisma/client';
+import type { TransactionClient } from '../../../generated/prisma/internal/prismaNamespace';
+
+export type PrismaTransaction = TransactionClient;
 
 @Injectable()
 export class PrismaService extends PrismaClient {

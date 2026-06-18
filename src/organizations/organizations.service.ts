@@ -193,28 +193,41 @@ export class OrganizationsService {
   async getDashboardResults(
     organizationId: string,
   ): Promise<DashboardResultDto> {
-    const memberships = await this.prisma.organizationMembership.findMany({
-      where: { organizationId, role: OrganizationRole.MEMBER },
+    const formLinks = await this.prisma.formOrganization.findMany({
+      where: { organizationId },
       include: {
-        user: {
-          select: {
-            id: true,
-            email: true,
-            username: true,
-            Form: {
-              where: { status: 'completed' },
+        form: {
+          include: {
+            User: {
+              select: { id: true, email: true, username: true },
+            },
+            answers: {
               select: {
-                answers: {
-                  select: {
-                    optionValue: true,
-                    Option: { select: { dimension: true } },
-                  },
-                },
+                optionValue: true,
+                Option: { select: { dimension: true } },
               },
-              orderBy: { updated_at: 'desc' },
-              take: 1,
             },
           },
+        },
+      },
+      orderBy: { form: { updated_at: 'desc' } },
+    });
+
+    const userLatestForm = new Map<string, typeof formLinks[0]['form']>();
+
+    for (const link of formLinks) {
+      const userId = link.form.User?.id;
+      if (!userId) continue;
+      if (!userLatestForm.has(userId)) {
+        userLatestForm.set(userId, link.form);
+      }
+    }
+
+    const allMembers = await this.prisma.organizationMembership.findMany({
+      where: { organizationId },
+      include: {
+        user: {
+          select: { id: true, email: true, username: true },
         },
       },
     });
@@ -223,10 +236,10 @@ export class OrganizationsService {
     const totalScores = { D: 0, I: 0, S: 0, C: 0 };
     let membersWithResults = 0;
 
-    for (const membership of memberships) {
-      const latestForm = membership.user.Form[0];
+    for (const membership of allMembers) {
+      const form = userLatestForm.get(membership.user.id);
 
-      if (!latestForm) {
+      if (!form) {
         members.push(
           new MemberResultDto({
             userId: membership.user.id,
@@ -242,7 +255,7 @@ export class OrganizationsService {
       }
 
       const scores = { D: 0, I: 0, S: 0, C: 0 };
-      for (const answer of latestForm.answers) {
+      for (const answer of form.answers) {
         scores[answer.Option.dimension]++;
       }
 

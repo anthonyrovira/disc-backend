@@ -35,6 +35,12 @@ describe('FormService', () => {
               update: jest.fn(),
               deleteMany: jest.fn(),
             },
+            organizationMembership: {
+              findMany: jest.fn(),
+            },
+            formOrganization: {
+              createMany: jest.fn(),
+            },
           },
         },
       ],
@@ -152,7 +158,8 @@ describe('FormService', () => {
       prisma.answer.create = jest.fn().mockResolvedValue(mockAnswer);
       prisma.formQuestion.update = jest.fn().mockResolvedValue({ ...mockFq, answered: true });
       prisma.formQuestion.count = jest.fn().mockResolvedValue(18);
-      prisma.form.update = jest.fn();
+      prisma.form.update = jest.fn().mockResolvedValue({ user_id: 'user1' });
+      prisma.organizationMembership.findMany = jest.fn().mockResolvedValue([]);
 
       const result = await service.submitFormAnswer(formId, 'q-1', '01_A');
 

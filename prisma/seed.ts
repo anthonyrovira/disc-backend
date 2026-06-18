@@ -7,6 +7,7 @@ const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
+  await prisma.$executeRawUnsafe('DELETE FROM "FormOrganization"');
   await prisma.$executeRawUnsafe('DELETE FROM "Invitation"');
   await prisma.$executeRawUnsafe('DELETE FROM "OrganizationMembership"');
   await prisma.$executeRawUnsafe('DELETE FROM "Organization"');

@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '@/common/prisma/prisma.service';
+import type { PrismaTransaction } from '@/common/prisma/prisma.service';
 import {
   AnswerProgressDto,
   AnswerResponseDto,
@@ -50,9 +51,14 @@ export class FormService {
 
     const shuffled = this.shuffle(allQuestions.map((q) => q.id)).slice(0, 30);
 
+    const formName =
+      name === 'disc_form'
+        ? this.generateFormName()
+        : name;
+
     return this.prisma.form.create({
       data: {
-        name,
+        name: formName,
         user_id: userId,
         status: 'in_progress',
         created_at: new Date(),
@@ -64,6 +70,14 @@ export class FormService {
         },
       },
     });
+  }
+
+  private generateFormName(): string {
+    const now = new Date();
+    const day = String(now.getDate()).padStart(2, '0');
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const year = now.getFullYear();
+    return `Test DISC - ${day}/${month}/${year}`;
   }
 
   async claimForm(formId: string, userId: string): Promise<Form> {
@@ -78,10 +92,16 @@ export class FormService {
         throw new ConflictException('This form is already associated with an account');
       }
 
-      return tx.form.update({
+      const updated = await tx.form.update({
         where: { id: formId },
         data: { user_id: userId, updated_at: new Date() },
       });
+
+      if (updated.status === 'completed') {
+        await this.linkFormToOrganizations(formId, userId, tx);
+      }
+
+      return updated;
     });
   }
 
@@ -383,9 +403,36 @@ export class FormService {
   }
 
   private async completeForm(formId: string): Promise<void> {
-    await this.prisma.form.update({
+    const form = await this.prisma.form.update({
       where: { id: formId },
       data: { status: 'completed', updated_at: new Date() },
+    });
+
+    if (form.user_id) {
+      await this.linkFormToOrganizations(formId, form.user_id);
+    }
+  }
+
+  private async linkFormToOrganizations(
+    formId: string,
+    userId: string,
+    tx?: PrismaTransaction,
+  ): Promise<void> {
+    const db = tx ?? this.prisma;
+
+    const memberships = await db.organizationMembership.findMany({
+      where: { userId },
+      select: { organizationId: true },
+    });
+
+    if (memberships.length === 0) return;
+
+    await db.formOrganization.createMany({
+      data: memberships.map((m) => ({
+        formId,
+        organizationId: m.organizationId,
+      })),
+      skipDuplicates: true,
     });
   }
 

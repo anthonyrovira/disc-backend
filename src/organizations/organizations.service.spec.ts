@@ -32,6 +32,9 @@ describe('OrganizationsService', () => {
       findUnique: jest.fn(),
       update: jest.fn(),
     },
+    formOrganization: {
+      findMany: jest.fn(),
+    },
     $transaction: jest.fn(),
   };
 
@@ -236,52 +239,46 @@ describe('OrganizationsService', () => {
 
   describe('getDashboardResults', () => {
     it('should compute average scores from completed forms', async () => {
-      const mockMemberships = [
+      const mockFormLinks = [
         {
-          userId: 'u1',
-          organizationId: 'org-id',
-          role: OrganizationRole.MEMBER,
-          user: {
-            id: 'u1',
-            email: 'member1@test.com',
-            username: 'Member1',
-            Form: [
-              {
-                answers: [
-                  { optionValue: 'q0_D', Option: { dimension: 'D' } },
-                  { optionValue: 'q1_I', Option: { dimension: 'I' } },
-                  { optionValue: 'q2_D', Option: { dimension: 'D' } },
-                  { optionValue: 'q3_S', Option: { dimension: 'S' } },
-                ],
-              },
+          form: {
+            updated_at: new Date(),
+            User: { id: 'u1', email: 'member1@test.com', username: 'Member1' },
+            answers: [
+              { optionValue: 'q0_D', Option: { dimension: 'D' } },
+              { optionValue: 'q1_I', Option: { dimension: 'I' } },
+              { optionValue: 'q2_D', Option: { dimension: 'D' } },
+              { optionValue: 'q3_S', Option: { dimension: 'S' } },
             ],
           },
         },
         {
-          userId: 'u2',
-          organizationId: 'org-id',
-          role: OrganizationRole.MEMBER,
-          user: {
-            id: 'u2',
-            email: 'member2@test.com',
-            username: null,
-            Form: [
-              {
-                answers: [
-                  { optionValue: 'q0_C', Option: { dimension: 'C' } },
-                  { optionValue: 'q1_C', Option: { dimension: 'C' } },
-                  { optionValue: 'q2_I', Option: { dimension: 'I' } },
-                  { optionValue: 'q3_D', Option: { dimension: 'D' } },
-                ],
-              },
+          form: {
+            updated_at: new Date(),
+            User: { id: 'u2', email: 'member2@test.com', username: null },
+            answers: [
+              { optionValue: 'q0_C', Option: { dimension: 'C' } },
+              { optionValue: 'q1_C', Option: { dimension: 'C' } },
+              { optionValue: 'q2_I', Option: { dimension: 'I' } },
+              { optionValue: 'q3_D', Option: { dimension: 'D' } },
             ],
           },
         },
       ];
 
-      mockPrisma.organizationMembership.findMany.mockResolvedValue(
-        mockMemberships,
-      );
+      const mockMemberships = [
+        {
+          userId: 'u1',
+          user: { id: 'u1', email: 'member1@test.com', username: 'Member1' },
+        },
+        {
+          userId: 'u2',
+          user: { id: 'u2', email: 'member2@test.com', username: null },
+        },
+      ];
+
+      mockPrisma.formOrganization.findMany.mockResolvedValue(mockFormLinks);
+      mockPrisma.organizationMembership.findMany.mockResolvedValue(mockMemberships);
 
       const result = await service.getDashboardResults('org-id');
 
@@ -297,20 +294,12 @@ describe('OrganizationsService', () => {
       const mockMemberships = [
         {
           userId: 'u1',
-          organizationId: 'org-id',
-          role: OrganizationRole.MEMBER,
-          user: {
-            id: 'u1',
-            email: 'member1@test.com',
-            username: null,
-            Form: [],
-          },
+          user: { id: 'u1', email: 'member1@test.com', username: null },
         },
       ];
 
-      mockPrisma.organizationMembership.findMany.mockResolvedValue(
-        mockMemberships,
-      );
+      mockPrisma.formOrganization.findMany.mockResolvedValue([]);
+      mockPrisma.organizationMembership.findMany.mockResolvedValue(mockMemberships);
 
       const result = await service.getDashboardResults('org-id');
 
