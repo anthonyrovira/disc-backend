@@ -20,6 +20,25 @@ enum FormStatus {
     completed
 }
 
+enum OrganizationRole {
+    OWNER
+    MANAGER
+    MEMBER
+}
+
+enum InvitationType {
+    TEAM_MEMBER
+    EXTERNAL
+    REFERRAL
+}
+
+enum InvitationStatus {
+    PENDING
+    ACCEPTED
+    EXPIRED
+    REVOKED
+}
+
 model User {
     id            String         @id @default(uuid())
     username      String?
@@ -29,6 +48,9 @@ model User {
     created_at    DateTime?      @default(now())
     Form          Form[]
     RefreshToken  RefreshToken[]
+    memberships   OrganizationMembership[]
+    invitedMemberships OrganizationMembership[] @relation("InvitedBy")
+    sentInvitations   Invitation[]
 }
 
 model Question {
@@ -63,6 +85,54 @@ model RefreshToken {
     @@index([userId])
 }
 
+model Organization {
+    id        String                    @id @default(uuid())
+    name      String
+    createdAt DateTime                  @default(now())
+    members   OrganizationMembership[]
+    invitations Invitation[]
+}
+
+model OrganizationMembership {
+    id             String           @id @default(cuid())
+    userId         String
+    organizationId String
+    role           OrganizationRole
+    invitedById    String?
+    joinedAt       DateTime         @default(now())
+
+    user         User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+    organization Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+    invitedBy    User?             @relation("InvitedBy", fields: [invitedById], references: [id])
+
+    @@unique([userId, organizationId])
+    @@index([userId])
+    @@index([organizationId])
+}
+
+model Invitation {
+    id              String           @id @default(uuid())
+    email           String
+    type            InvitationType
+    status          InvitationStatus @default(PENDING)
+    token           String           @unique
+    organizationId  String?
+    invitedByUserId String
+    expiresAt       DateTime
+    acceptedAt      DateTime?
+    formId          String?
+    createdAt       DateTime         @default(now())
+
+    organization Organization? @relation(fields: [organizationId], references: [id])
+    invitedBy    User          @relation(fields: [invitedByUserId], references: [id])
+    form         Form?         @relation(fields: [formId], references: [id])
+
+    @@index([organizationId])
+    @@index([invitedByUserId])
+    @@index([email])
+    @@index([status])
+}
+
 model Form {
     id         String         @id @default(uuid())
     name       String         @default("disc_form")
@@ -71,6 +141,7 @@ model Form {
     user_id    String?
     answers    Answer[]
     questions  FormQuestion[]
+    invitations Invitation[]
     created_at DateTime?      @default(now())
     updated_at DateTime?
 

@@ -6,6 +6,8 @@ import { PrismaModule } from '../common/prisma/prisma.module';
 import { AuthModule } from '@/auth';
 import { UserModule } from '@/user';
 import { FormModule } from '@/form/form.module';
+import { OrganizationsModule } from '@/organizations';
+import { InvitationsModule } from '@/invitations';
 
 @Module({
   imports: [
@@ -15,6 +17,8 @@ import { FormModule } from '@/form/form.module';
     AuthModule,
     UserModule,
     FormModule,
+    OrganizationsModule,
+    InvitationsModule,
     PrismaModule,
   ],
 })
