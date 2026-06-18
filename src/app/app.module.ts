@@ -1,12 +1,10 @@
 import { Module } from '@nestjs/common';
 import { ScheduleModule } from '@nestjs/schedule';
-import { AppService } from './app.service';
 import { ConfigModule } from '@nestjs/config';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { PrismaModule } from '../common/prisma/prisma.module';
 import { AuthModule } from '@/auth';
 import { UserModule } from '@/user';
-import { AppController } from '.';
 import { FormModule } from '@/form/form.module';
 
 @Module({
@@ -19,7 +17,5 @@ import { FormModule } from '@/form/form.module';
     FormModule,
     PrismaModule,
   ],
-  controllers: [AppController],
-  providers: [AppService],
 })
 export class AppModule {}
