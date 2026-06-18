@@ -27,6 +27,9 @@ describe('UserService', () => {
             answer: {
               deleteMany: jest.fn(),
             },
+            organizationMembership: {
+              findMany: jest.fn().mockResolvedValue([]),
+            },
           },
         },
       ],

@@ -1,10 +1,15 @@
 import {
+  BadRequestException,
+  ConflictException,
   ForbiddenException,
   Injectable,
   Logger,
   NotFoundException,
 } from '@nestjs/common';
-import { OrganizationRole } from '../../generated/prisma/client';
+import {
+  OrganizationRole,
+  OwnershipTransferStatus,
+} from '../../generated/prisma/client';
 import { PrismaService } from '@/common/prisma/prisma.service';
 import {
   CreateOrganizationDto,
@@ -251,6 +256,144 @@ export class OrganizationsService {
       members,
       total: membersWithResults,
     });
+  }
+
+  async initiateTransfer(
+    organizationId: string,
+    currentOwnerId: string,
+    targetUserId: string,
+  ): Promise<void> {
+    if (currentOwnerId === targetUserId) {
+      throw new BadRequestException(
+        'You are already the owner of this organization',
+      );
+    }
+
+    const targetMembership =
+      await this.prisma.organizationMembership.findUnique({
+        where: {
+          userId_organizationId: {
+            userId: targetUserId,
+            organizationId,
+          },
+        },
+      });
+
+    if (!targetMembership) {
+      throw new NotFoundException(
+        'Target user is not a member of this organization',
+      );
+    }
+
+    const existingTransfer =
+      await this.prisma.ownershipTransfer.findUnique({
+        where: {
+          organizationId_status: {
+            organizationId,
+            status: OwnershipTransferStatus.PENDING,
+          },
+        },
+      });
+
+    if (existingTransfer) {
+      throw new ConflictException(
+        'A pending ownership transfer already exists for this organization',
+      );
+    }
+
+    await this.prisma.ownershipTransfer.create({
+      data: {
+        organizationId,
+        fromUserId: currentOwnerId,
+        toUserId: targetUserId,
+        status: OwnershipTransferStatus.PENDING,
+      },
+    });
+  }
+
+  async cancelTransfer(
+    organizationId: string,
+    currentOwnerId: string,
+  ): Promise<void> {
+    const transfer = await this.prisma.ownershipTransfer.findUnique({
+      where: {
+        organizationId_status: {
+          organizationId,
+          status: OwnershipTransferStatus.PENDING,
+        },
+      },
+    });
+
+    if (!transfer) {
+      throw new NotFoundException(
+        'No pending ownership transfer found for this organization',
+      );
+    }
+
+    if (transfer.fromUserId !== currentOwnerId) {
+      throw new ForbiddenException(
+        'Only the current owner can cancel the transfer',
+      );
+    }
+
+    await this.prisma.ownershipTransfer.update({
+      where: { id: transfer.id },
+      data: { status: OwnershipTransferStatus.CANCELLED },
+    });
+  }
+
+  async acceptOwnership(
+    organizationId: string,
+    acceptingUserId: string,
+  ): Promise<void> {
+    const transfer = await this.prisma.ownershipTransfer.findUnique({
+      where: {
+        organizationId_status: {
+          organizationId,
+          status: OwnershipTransferStatus.PENDING,
+        },
+      },
+    });
+
+    if (!transfer) {
+      throw new NotFoundException(
+        'No pending ownership transfer found for this organization',
+      );
+    }
+
+    if (transfer.toUserId !== acceptingUserId) {
+      throw new ForbiddenException(
+        'You are not the designated recipient of this ownership transfer',
+      );
+    }
+
+    await this.prisma.$transaction([
+      this.prisma.organizationMembership.update({
+        where: {
+          userId_organizationId: {
+            userId: transfer.fromUserId,
+            organizationId,
+          },
+        },
+        data: { role: OrganizationRole.MANAGER },
+      }),
+      this.prisma.organizationMembership.update({
+        where: {
+          userId_organizationId: {
+            userId: transfer.toUserId,
+            organizationId,
+          },
+        },
+        data: { role: OrganizationRole.OWNER },
+      }),
+      this.prisma.ownershipTransfer.update({
+        where: { id: transfer.id },
+        data: {
+          status: OwnershipTransferStatus.ACCEPTED,
+          acceptedAt: new Date(),
+        },
+      }),
+    ]);
   }
 
   async deleteOrganization(organizationId: string): Promise<void> {

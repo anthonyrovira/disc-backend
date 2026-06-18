@@ -1,6 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable } from '@nestjs/common';
 import { PrismaService } from '@/common/prisma/prisma.service';
-import type { Prisma, User } from '../../generated/prisma/client';
+import {
+  OrganizationRole,
+  Prisma,
+  User,
+} from '../../generated/prisma/client';
 
 @Injectable()
 export class UserService {
@@ -52,6 +56,18 @@ export class UserService {
       select: { id: true },
     });
     if (!user) throw new Error('User not found');
+
+    const ownedOrgs = await this.prisma.organizationMembership.findMany({
+      where: { userId: user.id, role: OrganizationRole.OWNER },
+      select: { organization: { select: { name: true } } },
+    });
+
+    if (ownedOrgs.length > 0) {
+      const orgNames = ownedOrgs.map((m) => m.organization.name).join(', ');
+      throw new ForbiddenException(
+        `You are the owner of: ${orgNames}. Transfer ownership before deleting your account.`,
+      );
+    }
 
     const formIds = (
       await this.prisma.form.findMany({

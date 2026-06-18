@@ -30,6 +30,7 @@ import {
   OrganizationResponseDto,
   MemberDto,
   UpdateMemberRoleDto,
+  TransferOwnershipDto,
   DashboardResultDto,
 } from './dto/organizations.dto';
 
@@ -116,6 +117,48 @@ export class OrganizationsController {
     @Param('id') id: string,
   ): Promise<DashboardResultDto> {
     return this.orgService.getDashboardResults(id);
+  }
+
+  @Post(':id/transfer-ownership')
+  @UseGuards(JwtGuard, OrganizationRolesGuard)
+  @OrgRoles(OrganizationRole.OWNER)
+  @ApiBearerAuth()
+  @ApiOkResponse()
+  @ApiOperation({ summary: 'Initiate ownership transfer to another member' })
+  @ApiParam({ name: 'id', description: 'Organization ID' })
+  async initiateTransfer(
+    @GetUser() user: UserDto,
+    @Param('id') id: string,
+    @Body() dto: TransferOwnershipDto,
+  ): Promise<void> {
+    await this.orgService.initiateTransfer(id, user.id, dto.userId);
+  }
+
+  @Post(':id/transfer-ownership/cancel')
+  @UseGuards(JwtGuard, OrganizationRolesGuard)
+  @OrgRoles(OrganizationRole.OWNER)
+  @ApiBearerAuth()
+  @ApiOkResponse()
+  @ApiOperation({ summary: 'Cancel pending ownership transfer' })
+  @ApiParam({ name: 'id', description: 'Organization ID' })
+  async cancelTransfer(
+    @GetUser() user: UserDto,
+    @Param('id') id: string,
+  ): Promise<void> {
+    await this.orgService.cancelTransfer(id, user.id);
+  }
+
+  @Post(':id/accept-ownership')
+  @UseGuards(JwtGuard)
+  @ApiBearerAuth()
+  @ApiOkResponse()
+  @ApiOperation({ summary: 'Accept pending ownership transfer' })
+  @ApiParam({ name: 'id', description: 'Organization ID' })
+  async acceptOwnership(
+    @GetUser() user: UserDto,
+    @Param('id') id: string,
+  ): Promise<void> {
+    await this.orgService.acceptOwnership(id, user.id);
   }
 
   @Delete(':id')

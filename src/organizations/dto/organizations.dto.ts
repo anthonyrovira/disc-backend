@@ -7,6 +7,7 @@ import {
   IsObject,
   IsOptional,
   IsString,
+  IsUUID,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { OrganizationRole } from '../../../generated/prisma/client';
@@ -115,6 +116,16 @@ export class UpdateMemberRoleDto {
   })
   @IsEnum(OrganizationRole)
   role: OrganizationRole;
+}
+
+export class TransferOwnershipDto {
+  @ApiProperty({
+    description: 'The user ID of the member to become the new OWNER',
+    example: 'f8e8d1e0-7e6e-11ea-bc55-0242ac130003',
+  })
+  @IsUUID()
+  @IsNotEmpty()
+  userId: string;
 }
 
 export class MemberResultDto {
