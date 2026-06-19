@@ -11,6 +11,7 @@ import {
 import {
   ApiBearerAuth,
   ApiCreatedResponse,
+  ApiNoContentResponse,
   ApiOkResponse,
   ApiOperation,
   ApiParam,
@@ -65,10 +66,10 @@ export class InvitationsController {
   @Post(':token/accept')
   @UseGuards(JwtGuard)
   @ApiBearerAuth()
-  @ApiOkResponse()
+  @ApiNoContentResponse()
   @ApiOperation({ summary: 'Accept an invitation' })
   @ApiParam({ name: 'token', description: 'Invitation token' })
-  @HttpCode(HttpStatus.OK)
+  @HttpCode(HttpStatus.NO_CONTENT)
   async accept(
     @GetUser() user: UserDto,
     @Param('token') token: string,
@@ -79,10 +80,10 @@ export class InvitationsController {
   @Post(':token/revoke')
   @UseGuards(JwtGuard)
   @ApiBearerAuth()
-  @ApiOkResponse()
+  @ApiNoContentResponse()
   @ApiOperation({ summary: 'Revoke a pending invitation' })
   @ApiParam({ name: 'token', description: 'Invitation token' })
-  @HttpCode(HttpStatus.OK)
+  @HttpCode(HttpStatus.NO_CONTENT)
   async revoke(
     @GetUser() user: UserDto,
     @Param('token') token: string,

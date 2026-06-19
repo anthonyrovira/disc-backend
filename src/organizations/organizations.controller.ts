@@ -135,9 +135,10 @@ export class OrganizationsController {
   @UseGuards(JwtGuard, OrganizationRolesGuard)
   @OrgRoles(OrganizationRole.OWNER)
   @ApiBearerAuth()
-  @ApiOkResponse()
+  @ApiNoContentResponse()
   @ApiOperation({ summary: 'Initiate ownership transfer to another member' })
   @ApiParam({ name: 'id', description: 'Organization ID' })
+  @HttpCode(HttpStatus.NO_CONTENT)
   async initiateTransfer(
     @GetUser() user: UserDto,
     @Param('id') id: string,
@@ -150,9 +151,10 @@ export class OrganizationsController {
   @UseGuards(JwtGuard, OrganizationRolesGuard)
   @OrgRoles(OrganizationRole.OWNER)
   @ApiBearerAuth()
-  @ApiOkResponse()
+  @ApiNoContentResponse()
   @ApiOperation({ summary: 'Cancel pending ownership transfer' })
   @ApiParam({ name: 'id', description: 'Organization ID' })
+  @HttpCode(HttpStatus.NO_CONTENT)
   async cancelTransfer(
     @GetUser() user: UserDto,
     @Param('id') id: string,
@@ -163,9 +165,10 @@ export class OrganizationsController {
   @Post(':id/accept-ownership')
   @UseGuards(JwtGuard)
   @ApiBearerAuth()
-  @ApiOkResponse()
+  @ApiNoContentResponse()
   @ApiOperation({ summary: 'Accept pending ownership transfer' })
   @ApiParam({ name: 'id', description: 'Organization ID' })
+  @HttpCode(HttpStatus.NO_CONTENT)
   async acceptOwnership(
     @GetUser() user: UserDto,
     @Param('id') id: string,
