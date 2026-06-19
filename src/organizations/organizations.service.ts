@@ -101,7 +101,7 @@ export class OrganizationsService {
       where: { organizationId },
       include: {
         user: {
-          select: { id: true, email: true },
+          select: { id: true, email: true, firstName: true, lastName: true },
         },
       },
       orderBy: { joinedAt: 'asc' },
@@ -112,6 +112,8 @@ export class OrganizationsService {
         new MemberDto({
           userId: m.userId,
           email: m.user.email,
+          firstName: m.user.firstName ?? undefined,
+          lastName: m.user.lastName ?? undefined,
           role: m.role,
           joinedAt: m.joinedAt,
           lastTestDate: lastTestMap.get(m.userId),
@@ -246,7 +248,7 @@ export class OrganizationsService {
       where: { organizationId },
       include: {
         user: {
-          select: { id: true, email: true },
+          select: { id: true, email: true, firstName: true, lastName: true },
         },
       },
     });
@@ -263,6 +265,8 @@ export class OrganizationsService {
           new MemberResultDto({
             userId: membership.user.id,
             email: membership.user.email,
+            firstName: membership.user.firstName ?? undefined,
+            lastName: membership.user.lastName ?? undefined,
             D: 0,
             I: 0,
             S: 0,
@@ -287,6 +291,8 @@ export class OrganizationsService {
         new MemberResultDto({
           userId: membership.user.id,
           email: membership.user.email,
+          firstName: membership.user.firstName ?? undefined,
+          lastName: membership.user.lastName ?? undefined,
           ...scores,
         }),
       );

@@ -113,6 +113,20 @@ export class MemberDto {
   @Allow()
   email: string;
 
+  @ApiPropertyOptional({
+    description: 'The first name of the member',
+  })
+  @IsOptional()
+  @Allow()
+  firstName?: string;
+
+  @ApiPropertyOptional({
+    description: 'The last name of the member',
+  })
+  @IsOptional()
+  @Allow()
+  lastName?: string;
+
   @ApiProperty({
     description: 'The role of the member in the organization',
     enum: OrganizationRole,
@@ -142,12 +156,16 @@ export class MemberDto {
   constructor(data: {
     userId: string;
     email: string;
+    firstName?: string;
+    lastName?: string;
     role: OrganizationRole;
     joinedAt: Date;
     lastTestDate?: Date;
   }) {
     this.userId = data.userId;
     this.email = data.email;
+    this.firstName = data.firstName;
+    this.lastName = data.lastName;
     this.role = data.role;
     this.joinedAt = data.joinedAt;
     this.lastTestDate = data.lastTestDate;
@@ -183,6 +201,16 @@ export class MemberResultDto {
   @Allow()
   email: string;
 
+  @ApiPropertyOptional({ description: 'The first name of the member' })
+  @IsOptional()
+  @Allow()
+  firstName?: string;
+
+  @ApiPropertyOptional({ description: 'The last name of the member' })
+  @IsOptional()
+  @Allow()
+  lastName?: string;
+
   @ApiProperty({ description: 'D score', example: 8 })
   @Allow()
   D: number;
@@ -202,6 +230,8 @@ export class MemberResultDto {
   constructor(data: {
     userId: string;
     email: string;
+    firstName?: string;
+    lastName?: string;
     D: number;
     I: number;
     S: number;
@@ -209,6 +239,8 @@ export class MemberResultDto {
   }) {
     this.userId = data.userId;
     this.email = data.email;
+    this.firstName = data.firstName;
+    this.lastName = data.lastName;
     this.D = data.D;
     this.I = data.I;
     this.S = data.S;
