@@ -30,6 +30,8 @@ export class AuthService {
         data: {
           email: dto.email,
           hash,
+          firstName: dto.firstName,
+          ...(dto.lastName && { lastName: dto.lastName }),
         },
       });
 
@@ -81,6 +83,7 @@ export class AuthService {
     email: string;
     googleId: string;
     firstName: string;
+    lastName?: string;
   }): Promise<AuthResponseDto> {
     let existing = await this.prisma.user.findUnique({
       where: { email: user.email },
@@ -105,6 +108,7 @@ export class AuthService {
           email: user.email,
           googleId: user.googleId,
           firstName: user.firstName,
+          ...(user.lastName && { lastName: user.lastName }),
         },
       });
     }

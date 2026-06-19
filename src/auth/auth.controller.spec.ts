@@ -35,6 +35,7 @@ describe('AuthController', () => {
       const authRequestDto: AuthRequestDto = {
         email: 'user@example.com',
         password: 'password',
+        firstName: 'John',
       };
       const expectedResponse: AuthResponseDto = {
         access_token: 'fake-token',
@@ -55,6 +56,7 @@ describe('AuthController', () => {
       const authRequestDto: AuthRequestDto = {
         email: 'user@example.com',
         password: 'password',
+        firstName: 'John',
       };
       const expectedResponse: AuthResponseDto = {
         access_token: 'fake-token',

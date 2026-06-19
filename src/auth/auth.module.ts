@@ -24,7 +24,7 @@ import { RefreshTokenService } from './refresh-token.service';
     AuthService,
     JwtStrategy,
     RefreshTokenService,
-    ...(process.env.GOOGLE_CLIENT_ID ? [GoogleStrategy] : []),
+    GoogleStrategy,
   ],
 })
 export class AuthModule {}

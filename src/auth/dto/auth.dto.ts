@@ -1,5 +1,5 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsEmail, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class AuthRequestDto {
   @ApiProperty({
@@ -17,6 +17,23 @@ export class AuthRequestDto {
   @IsString({ message: 'Le mot de passe doit être une chaîne de caractères' })
   @IsNotEmpty({ message: 'Le mot de passe ne peut pas être vide' })
   password: string;
+
+  @ApiProperty({
+    description: 'The first name',
+    example: 'John',
+  })
+  @IsString({ message: 'Le prénom doit être une chaîne de caractères' })
+  @IsNotEmpty({ message: 'Le prénom ne peut pas être vide' })
+  firstName: string;
+
+  @ApiPropertyOptional({
+    description: 'The last name',
+    example: 'Doe',
+    required: false,
+  })
+  @IsOptional()
+  @IsString({ message: 'Le nom doit être une chaîne de caractères' })
+  lastName?: string;
 }
 
 export class AuthResponseDto {

@@ -56,7 +56,7 @@ describe('AuthService', () => {
 
   describe('signUp', () => {
     it('should create a new user and return tokens', async () => {
-      const mockDto = { email: 'test@example.com', password: 'password' };
+      const mockDto = { email: 'test@example.com', password: 'password', firstName: 'John' };
       const mockUser = { id: 'userId', email: 'test@example.com' };
       const mockToken = 'mockAccessToken';
       const mockRefresh = 'mockRefreshToken';
@@ -81,7 +81,7 @@ describe('AuthService', () => {
     });
 
     it('should throw InternalServerErrorException if email already exists', async () => {
-      const mockDto = { email: 'test@example.com', password: 'password' };
+      const mockDto = { email: 'test@example.com', password: 'password', firstName: 'John' };
 
       prismaService.user.create = jest
         .fn()
@@ -93,7 +93,7 @@ describe('AuthService', () => {
     });
 
     it('should throw other errors', async () => {
-      const mockDto = { email: 'test@example.com', password: 'password' };
+      const mockDto = { email: 'test@example.com', password: 'password', firstName: 'John' };
 
       prismaService.user.create = jest
         .fn()
@@ -105,7 +105,7 @@ describe('AuthService', () => {
 
   describe('signIn', () => {
     it('should return tokens if credentials are correct', async () => {
-      const mockDto = { email: 'test@example.com', password: 'password' };
+      const mockDto = { email: 'test@example.com', password: 'password', firstName: 'John' };
       const mockedHash = await argon.hash(mockDto.password);
       const mockUser = {
         id: 'userId',
@@ -137,7 +137,7 @@ describe('AuthService', () => {
     });
 
     it('should throw ForbiddenException if user not found', async () => {
-      const mockDto = { email: 'test@example.com', password: 'password' };
+      const mockDto = { email: 'test@example.com', password: 'password', firstName: 'John' };
 
       prismaService.user.findUnique = jest.fn().mockResolvedValue(null);
 
@@ -147,7 +147,7 @@ describe('AuthService', () => {
     });
 
     it('should throw ForbiddenException if user is Google-only', async () => {
-      const mockDto = { email: 'test@example.com', password: 'password' };
+      const mockDto = { email: 'test@example.com', password: 'password', firstName: 'John' };
       const mockUser = {
         id: 'userId',
         email: 'test@example.com',
@@ -165,7 +165,7 @@ describe('AuthService', () => {
     });
 
     it('should throw ForbiddenException if password is incorrect', async () => {
-      const mockDto = { email: 'test@example.com', password: 'password' };
+      const mockDto = { email: 'test@example.com', password: 'password', firstName: 'John' };
       const mockedHash = await argon.hash('randomPassword');
       const mockUser = {
         id: 'userId',
@@ -181,7 +181,7 @@ describe('AuthService', () => {
     });
 
     it('should throw other errors', async () => {
-      const mockDto = { email: 'test@example.com', password: 'password' };
+      const mockDto = { email: 'test@example.com', password: 'password', firstName: 'John' };
 
       prismaService.user.findUnique = jest
         .fn()

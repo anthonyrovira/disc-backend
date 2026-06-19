@@ -10,7 +10,7 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
       clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? '',
       callbackURL: process.env.GOOGLE_CALLBACK_URL ?? 'http://localhost:3001/auth/google/callback',
       scope: ['email', 'profile'],
-      state: true,
+      state: false,
     });
   }
 
@@ -27,10 +27,15 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
       return done(new Error('No email returned from Google'), false);
     }
 
+    const nameParts = displayName?.split(' ') || [];
+    const firstName = nameParts[0] || '';
+    const lastName = nameParts.slice(1).join(' ') || undefined;
+
     const user = {
       email,
       googleId: id,
-      firstName: displayName,
+      firstName,
+      lastName,
     };
 
     return done(null, user);
