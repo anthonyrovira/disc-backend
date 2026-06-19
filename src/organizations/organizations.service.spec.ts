@@ -101,7 +101,7 @@ describe('OrganizationsService', () => {
 
       const mockFormLinks = [
         {
-          form: { user_id: 'u1', updated_at: testDate },
+          form: { user_id: 'u1', updated_at: testDate, status: 'completed' },
         },
       ];
 

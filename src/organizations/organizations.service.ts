@@ -82,8 +82,7 @@ export class OrganizationsService {
       where: { organizationId },
       include: {
         form: {
-          select: { user_id: true, updated_at: true },
-          where: { status: 'completed' },
+          select: { user_id: true, updated_at: true, status: true },
         },
       },
       orderBy: { form: { updated_at: 'desc' } },
@@ -91,6 +90,7 @@ export class OrganizationsService {
 
     const lastTestMap = new Map<string, Date>();
     for (const link of formLinks) {
+      if (link.form.status !== 'completed') continue;
       const userId = link.form.user_id;
       if (userId && !lastTestMap.has(userId)) {
         lastTestMap.set(userId, link.form.updated_at!);
