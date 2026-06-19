@@ -13,6 +13,7 @@ import {
   OrganizationRole,
 } from '../../generated/prisma/client';
 import { PrismaService } from '@/common/prisma/prisma.service';
+import { EmailService } from '@/email';
 import {
   CreateInvitationDto,
   InvitationResponseDto,
@@ -23,7 +24,10 @@ import {
 export class InvitationsService {
   private readonly logger = new Logger(InvitationsService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly emailService: EmailService,
+  ) {}
 
   async create(
     userId: string,
@@ -125,7 +129,7 @@ export class InvitationsService {
       },
     });
 
-    return new InvitationResponseDto({
+    const response = new InvitationResponseDto({
       id: invitation.id,
       email: invitation.email,
       type: invitation.type as InvitationType,
@@ -136,6 +140,80 @@ export class InvitationsService {
       expiresAt: invitation.expiresAt,
       createdAt: invitation.createdAt,
     });
+
+    await this.sendInvitationEmail(userId, invitation, token);
+
+    return response;
+  }
+
+  private async sendInvitationEmail(
+    userId: string,
+    invitation: {
+      email: string;
+      type: InvitationType;
+      organization?: { name: string } | null;
+    },
+    token: string,
+  ): Promise<void> {
+    try {
+      const inviter = await this.prisma.user.findUnique({
+        where: { id: userId },
+        select: { firstName: true, lastName: true },
+      });
+
+      if (!inviter) {
+        this.logger.warn(`Inviter not found for user ${userId}, skipping email`);
+        return;
+      }
+
+      const inviterName = inviter.lastName
+        ? `${inviter.firstName} ${inviter.lastName}`
+        : inviter.firstName;
+
+      const orgName = invitation.organization?.name;
+      const invitationUrl = `${this.emailService.appUrl}/invitations/${token}`;
+
+      const templateConfigs: Record<
+        InvitationType,
+        { template: string; subject: string } | undefined
+      > = {
+        [InvitationType.TEAM_MEMBER]: {
+          template: 'team-member-invitation',
+          subject: `${inviterName} vous invite à rejoindre ${orgName ?? 'une organisation'} sur DISC.dev`,
+        },
+        [InvitationType.CANDIDATE]: {
+          template: 'candidate-invitation',
+          subject: `Test DISC — ${orgName ?? 'une organisation'} vous sollicite`,
+        },
+        [InvitationType.REFERRAL]: {
+          template: 'referral-invitation',
+          subject: `${inviterName} vous recommande DISC.dev`,
+        },
+      };
+
+      const config = templateConfigs[invitation.type];
+
+      if (!config) {
+        this.logger.warn(`No email template for invitation type ${invitation.type}`);
+        return;
+      }
+
+      await this.emailService.send({
+        to: invitation.email,
+        subject: config.subject,
+        template: config.template,
+        data: {
+          inviterName,
+          organizationName: orgName,
+          invitationUrl,
+        },
+      });
+    } catch (err) {
+      this.logger.error(
+        `Failed to send invitation email to ${invitation.email}`,
+        err instanceof Error ? err.message : String(err),
+      );
+    }
   }
 
   async getUserInvitations(userId: string): Promise<InvitationResponseDto[]> {
@@ -284,5 +362,56 @@ export class InvitationsService {
         }
       }
     });
+
+    if (
+      invitation.type === InvitationType.TEAM_MEMBER &&
+      invitation.organizationId
+    ) {
+      await this.notifyInviterOnAccept(invitation, userEmail);
+    }
+  }
+
+  private async notifyInviterOnAccept(
+    invitation: {
+      invitedByUserId: string;
+      organization?: { name: string } | null;
+    },
+    acceptedUserEmail: string,
+  ): Promise<void> {
+    try {
+      const inviter = await this.prisma.user.findUnique({
+        where: { id: invitation.invitedByUserId },
+        select: { email: true, firstName: true, lastName: true },
+      });
+
+      if (!inviter) {
+        this.logger.warn(
+          `Inviter ${invitation.invitedByUserId} not found, skipping notification`,
+        );
+        return;
+      }
+
+      const orgName = invitation.organization?.name ?? 'une organisation';
+      const teamUrl = `${this.emailService.appUrl}/organizations/${invitation.invitedByUserId}`;
+
+      await this.emailService.send({
+        to: inviter.email,
+        subject: `${acceptedUserEmail} a rejoint ${orgName}`,
+        template: 'invitation-accepted',
+        data: {
+          managerName: inviter.lastName
+            ? `${inviter.firstName} ${inviter.lastName}`
+            : inviter.firstName,
+          invitedUserEmail: acceptedUserEmail,
+          organizationName: orgName,
+          teamUrl,
+        },
+      });
+    } catch (err) {
+      this.logger.error(
+        `Failed to send acceptance notification to inviter`,
+        err instanceof Error ? err.message : String(err),
+      );
+    }
   }
 }

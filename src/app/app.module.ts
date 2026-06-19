@@ -8,6 +8,7 @@ import { UserModule } from '@/user';
 import { FormModule } from '@/form/form.module';
 import { OrganizationsModule } from '@/organizations';
 import { InvitationsModule } from '@/invitations';
+import { EmailModule } from '@/email';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { InvitationsModule } from '@/invitations';
     FormModule,
     OrganizationsModule,
     InvitationsModule,
+    EmailModule,
     PrismaModule,
   ],
 })

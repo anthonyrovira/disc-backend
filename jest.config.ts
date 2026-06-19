@@ -1,11 +1,11 @@
 import type { Config } from 'jest';
 
 const config: Config = {
-  moduleFileExtensions: ['js', 'json', 'ts'],
+  moduleFileExtensions: ['js', 'json', 'ts', 'tsx'],
   rootDir: '.',
   testRegex: '.*\\.spec\\.ts$',
   transform: {
-    '^.+\\.(t|j)s$': [
+    '^.+\\.(t|j)sx?$': [
       'ts-jest',
       {
         useESM: true,
@@ -16,7 +16,7 @@ const config: Config = {
       },
     ],
   },
-  extensionsToTreatAsEsm: ['.ts'],
+  extensionsToTreatAsEsm: ['.ts', '.tsx'],
 
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',

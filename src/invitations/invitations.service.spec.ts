@@ -6,6 +6,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '@/common/prisma/prisma.service';
+import { EmailService } from '@/email';
 import { InvitationsService } from './invitations.service';
 import {
   InvitationType,
@@ -16,7 +17,15 @@ import {
 describe('InvitationsService', () => {
   let service: InvitationsService;
 
+  const mockEmailService = {
+    send: jest.fn(),
+    appUrl: 'http://localhost:5173',
+  };
+
   const mockPrisma = {
+    user: {
+      findUnique: jest.fn(),
+    },
     invitation: {
       create: jest.fn(),
       findUnique: jest.fn(),
@@ -39,6 +48,7 @@ describe('InvitationsService', () => {
       providers: [
         InvitationsService,
         { provide: PrismaService, useValue: mockPrisma },
+        { provide: EmailService, useValue: mockEmailService },
       ],
     }).compile();
 
@@ -142,6 +152,11 @@ describe('InvitationsService', () => {
       };
 
       mockPrisma.invitation.create.mockResolvedValue(mockInvitation);
+      mockPrisma.user.findUnique.mockResolvedValue({
+        id: 'user-id',
+        firstName: 'John',
+        lastName: 'Doe',
+      });
 
       const result = await service.create(
         'user-id',
@@ -170,6 +185,11 @@ describe('InvitationsService', () => {
       };
 
       mockPrisma.invitation.create.mockResolvedValue(mockInvitation);
+      mockPrisma.user.findUnique.mockResolvedValue({
+        id: 'user-id',
+        firstName: 'Jane',
+        lastName: null,
+      });
 
       const result = await service.create('user-id', 'owner@acme.com', {
         email: 'friend@test.com',
@@ -309,6 +329,13 @@ describe('InvitationsService', () => {
         },
       );
 
+      mockPrisma.user.findUnique.mockResolvedValue({
+        id: 'inviter-id',
+        firstName: 'John',
+        lastName: 'Doe',
+        email: 'inviter@acme.com',
+      });
+
       await service.accept(validToken, 'user-id', 'invited@acme.com');
 
       expect(mockPrisma.$transaction).toHaveBeenCalled();
@@ -334,6 +361,13 @@ describe('InvitationsService', () => {
           await cb(tx);
         },
       );
+
+      mockPrisma.user.findUnique.mockResolvedValue({
+        id: 'inviter-id',
+        firstName: 'John',
+        lastName: 'Doe',
+        email: 'inviter@acme.com',
+      });
 
       await service.accept(validToken, 'user-id', 'invited@acme.com');
 

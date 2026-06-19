@@ -4,6 +4,8 @@
     "moduleResolution": "NodeNext",
     "target": "ES2023",
     "strict": true,
+    "jsx": "react-jsx",
+    "jsxImportSource": "react",
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "ignoreDeprecations": "6.0",
