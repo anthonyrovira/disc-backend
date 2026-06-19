@@ -96,24 +96,33 @@ describe('OrganizationsService', () => {
   });
 
   describe('getMembers', () => {
-    it('should return members list', async () => {
+    it('should return members list with lastTestDate', async () => {
+      const testDate = new Date('2025-06-01');
+
+      const mockFormLinks = [
+        {
+          form: { user_id: 'u1', updated_at: testDate },
+        },
+      ];
+
       const mockMemberships = [
         {
           userId: 'u1',
           organizationId: 'org-id',
           role: OrganizationRole.OWNER,
           joinedAt: new Date(),
-          user: { id: 'u1', email: 'owner@test.com', username: 'Owner' },
+          user: { id: 'u1', email: 'owner@test.com' },
         },
         {
           userId: 'u2',
           organizationId: 'org-id',
           role: OrganizationRole.MEMBER,
           joinedAt: new Date(),
-          user: { id: 'u2', email: 'member@test.com', username: null },
+          user: { id: 'u2', email: 'member@test.com' },
         },
       ];
 
+      mockPrisma.formOrganization.findMany.mockResolvedValue(mockFormLinks);
       mockPrisma.organizationMembership.findMany.mockResolvedValue(
         mockMemberships,
       );
@@ -122,7 +131,9 @@ describe('OrganizationsService', () => {
 
       expect(result).toHaveLength(2);
       expect(result[0].role).toBe(OrganizationRole.OWNER);
+      expect(result[0].lastTestDate).toEqual(testDate);
       expect(result[1].email).toBe('member@test.com');
+      expect(result[1].lastTestDate).toBeUndefined();
     });
   });
 
@@ -243,7 +254,7 @@ describe('OrganizationsService', () => {
         {
           form: {
             updated_at: new Date(),
-            User: { id: 'u1', email: 'member1@test.com', username: 'Member1' },
+            User: { id: 'u1', email: 'member1@test.com' },
             answers: [
               { optionValue: 'q0_D', Option: { dimension: 'D' } },
               { optionValue: 'q1_I', Option: { dimension: 'I' } },
@@ -255,7 +266,7 @@ describe('OrganizationsService', () => {
         {
           form: {
             updated_at: new Date(),
-            User: { id: 'u2', email: 'member2@test.com', username: null },
+            User: { id: 'u2', email: 'member2@test.com' },
             answers: [
               { optionValue: 'q0_C', Option: { dimension: 'C' } },
               { optionValue: 'q1_C', Option: { dimension: 'C' } },
@@ -269,11 +280,11 @@ describe('OrganizationsService', () => {
       const mockMemberships = [
         {
           userId: 'u1',
-          user: { id: 'u1', email: 'member1@test.com', username: 'Member1' },
+          user: { id: 'u1', email: 'member1@test.com' },
         },
         {
           userId: 'u2',
-          user: { id: 'u2', email: 'member2@test.com', username: null },
+          user: { id: 'u2', email: 'member2@test.com' },
         },
       ];
 
@@ -294,7 +305,7 @@ describe('OrganizationsService', () => {
       const mockMemberships = [
         {
           userId: 'u1',
-          user: { id: 'u1', email: 'member1@test.com', username: null },
+          user: { id: 'u1', email: 'member1@test.com' },
         },
       ];
 

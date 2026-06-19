@@ -7,7 +7,6 @@ describe('UserDto', () => {
       id: '123',
       email: 'user@example.com',
       created_at: new Date('2023-07-01T10:00:00Z'),
-      username: 'JohnDoe51',
       firstName: 'John',
       lastName: 'Doe',
       birthDate: new Date('1990-05-15'),
@@ -16,7 +15,6 @@ describe('UserDto', () => {
     expect(userDto).toBeDefined();
     expect(userDto.id).toBe('123');
     expect(userDto.email).toBe('user@example.com');
-    expect(userDto.username).toBe('JohnDoe51');
     expect(userDto.firstName).toBe('John');
     expect(userDto.lastName).toBe('Doe');
     expect(userDto.birthDate).toEqual(new Date('1990-05-15'));
@@ -32,7 +30,6 @@ describe('UserDto', () => {
     expect(userDto).toBeDefined();
     expect(userDto.id).toBe('123');
     expect(userDto.email).toBe('user@example.com');
-    expect(userDto.username).toBeUndefined();
     expect(userDto.firstName).toBeUndefined();
     expect(userDto.lastName).toBeUndefined();
     expect(userDto.birthDate).toBeUndefined();
@@ -46,7 +43,6 @@ describe('UpdateProfileDto', () => {
     dto.firstName = 'John';
     dto.lastName = 'Doe';
     dto.email = 'john@example.com';
-    dto.username = 'johnny';
     dto.birthDate = '1990-05-15';
 
     const errors = await validate(dto);

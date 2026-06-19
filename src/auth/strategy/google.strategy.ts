@@ -30,7 +30,7 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     const user = {
       email,
       googleId: id,
-      username: displayName,
+      firstName: displayName,
     };
 
     return done(null, user);

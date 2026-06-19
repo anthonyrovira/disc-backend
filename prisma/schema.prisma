@@ -48,7 +48,6 @@ enum OwnershipTransferStatus {
 
 model User {
     id            String         @id @default(uuid())
-    username      String?
     firstName     String?
     lastName      String?
     birthDate     DateTime?

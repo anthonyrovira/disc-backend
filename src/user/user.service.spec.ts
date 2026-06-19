@@ -104,7 +104,6 @@ describe('UserService', () => {
       const mockUser = {
         id: 'uid',
         email: 'new@example.com',
-        username: 'newuser',
         firstName: 'John',
         lastName: 'Doe',
         birthDate: new Date('1990-05-15'),
@@ -117,7 +116,6 @@ describe('UserService', () => {
         firstName: 'John',
         lastName: 'Doe',
         email: 'new@example.com',
-        username: 'newuser',
         birthDate: '1990-05-15',
       });
 
@@ -128,7 +126,6 @@ describe('UserService', () => {
           firstName: 'John',
           lastName: 'Doe',
           email: 'new@example.com',
-          username: 'newuser',
           birthDate: new Date('1990-05-15'),
         },
       });

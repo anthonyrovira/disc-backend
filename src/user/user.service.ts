@@ -108,9 +108,6 @@ export class UserService {
     if (dto.lastName !== undefined) {
       data.lastName = dto.lastName;
     }
-    if (dto.username !== undefined) {
-      data.username = dto.username;
-    }
     if (dto.email !== undefined) {
       const existing = await this.prisma.user.findUnique({
         where: { email: dto.email },

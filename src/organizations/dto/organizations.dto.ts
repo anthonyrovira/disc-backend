@@ -113,14 +113,6 @@ export class MemberDto {
   @Allow()
   email: string;
 
-  @ApiPropertyOptional({
-    description: 'The username of the member',
-    example: 'JaneDoe',
-  })
-  @IsOptional()
-  @Allow()
-  username?: string;
-
   @ApiProperty({
     description: 'The role of the member in the organization',
     enum: OrganizationRole,
@@ -138,18 +130,27 @@ export class MemberDto {
   @Type(() => Date)
   joinedAt: Date;
 
+  @ApiPropertyOptional({
+    description: 'Date of the most recent DISC test linked to this organization',
+  })
+  @IsOptional()
+  @Allow()
+  @IsDate()
+  @Type(() => Date)
+  lastTestDate?: Date;
+
   constructor(data: {
     userId: string;
     email: string;
-    username?: string;
     role: OrganizationRole;
     joinedAt: Date;
+    lastTestDate?: Date;
   }) {
     this.userId = data.userId;
     this.email = data.email;
-    this.username = data.username;
     this.role = data.role;
     this.joinedAt = data.joinedAt;
+    this.lastTestDate = data.lastTestDate;
   }
 }
 
@@ -182,11 +183,6 @@ export class MemberResultDto {
   @Allow()
   email: string;
 
-  @ApiPropertyOptional({ description: 'The username of the member' })
-  @IsOptional()
-  @Allow()
-  username?: string;
-
   @ApiProperty({ description: 'D score', example: 8 })
   @Allow()
   D: number;
@@ -206,7 +202,6 @@ export class MemberResultDto {
   constructor(data: {
     userId: string;
     email: string;
-    username?: string;
     D: number;
     I: number;
     S: number;
@@ -214,7 +209,6 @@ export class MemberResultDto {
   }) {
     this.userId = data.userId;
     this.email = data.email;
-    this.username = data.username;
     this.D = data.D;
     this.I = data.I;
     this.S = data.S;
@@ -232,7 +226,7 @@ export class DashboardResultDto {
   averageScores: { D: number; I: number; S: number; C: number };
 
   @ApiProperty({
-    description: 'Individual results of MEMBER members',
+    description: 'Individual results of members',
     type: MemberResultDto,
     isArray: true,
   })

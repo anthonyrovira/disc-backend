@@ -78,11 +78,30 @@ export class OrganizationsService {
   }
 
   async getMembers(organizationId: string): Promise<MemberDto[]> {
+    const formLinks = await this.prisma.formOrganization.findMany({
+      where: { organizationId },
+      include: {
+        form: {
+          select: { user_id: true, updated_at: true },
+          where: { status: 'completed' },
+        },
+      },
+      orderBy: { form: { updated_at: 'desc' } },
+    });
+
+    const lastTestMap = new Map<string, Date>();
+    for (const link of formLinks) {
+      const userId = link.form.user_id;
+      if (userId && !lastTestMap.has(userId)) {
+        lastTestMap.set(userId, link.form.updated_at!);
+      }
+    }
+
     const memberships = await this.prisma.organizationMembership.findMany({
       where: { organizationId },
       include: {
         user: {
-          select: { id: true, email: true, username: true },
+          select: { id: true, email: true },
         },
       },
       orderBy: { joinedAt: 'asc' },
@@ -93,9 +112,9 @@ export class OrganizationsService {
         new MemberDto({
           userId: m.userId,
           email: m.user.email,
-          username: m.user.username,
           role: m.role,
           joinedAt: m.joinedAt,
+          lastTestDate: lastTestMap.get(m.userId),
         }),
     );
   }
@@ -199,7 +218,7 @@ export class OrganizationsService {
         form: {
           include: {
             User: {
-              select: { id: true, email: true, username: true },
+          select: { id: true, email: true },
             },
             answers: {
               select: {
@@ -227,7 +246,7 @@ export class OrganizationsService {
       where: { organizationId },
       include: {
         user: {
-          select: { id: true, email: true, username: true },
+          select: { id: true, email: true },
         },
       },
     });
@@ -244,7 +263,6 @@ export class OrganizationsService {
           new MemberResultDto({
             userId: membership.user.id,
             email: membership.user.email,
-            username: membership.user.username,
             D: 0,
             I: 0,
             S: 0,
@@ -269,7 +287,6 @@ export class OrganizationsService {
         new MemberResultDto({
           userId: membership.user.id,
           email: membership.user.email,
-          username: membership.user.username,
           ...scores,
         }),
       );

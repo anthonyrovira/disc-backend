@@ -47,7 +47,6 @@ export class UserController {
     return new UserDto({
       id: updated.id,
       email: updated.email,
-      username: updated.username ?? undefined,
       firstName: updated.firstName ?? undefined,
       lastName: updated.lastName ?? undefined,
       birthDate: updated.birthDate ?? undefined,

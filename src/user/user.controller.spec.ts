@@ -38,7 +38,6 @@ describe('UserController', () => {
     const mockUpdated = {
       id: 'uid',
       email: 'test@test.com',
-      username: null,
       firstName: 'John',
       lastName: null,
       birthDate: null,

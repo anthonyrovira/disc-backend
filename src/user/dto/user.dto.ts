@@ -16,12 +16,6 @@ export class UserDto {
   id: string;
 
   @ApiPropertyOptional({
-    description: 'The name of the user',
-    example: 'JohnDoe51',
-  })
-  username?: string;
-
-  @ApiPropertyOptional({
     description: 'The first name of the user',
     example: 'John',
   })
@@ -55,7 +49,6 @@ export class UserDto {
   constructor({
     id,
     email,
-    username,
     firstName,
     lastName,
     birthDate,
@@ -63,7 +56,6 @@ export class UserDto {
   }: {
     id: string;
     email: string;
-    username?: string;
     firstName?: string;
     lastName?: string;
     birthDate?: Date;
@@ -71,7 +63,6 @@ export class UserDto {
   }) {
     this.id = id;
     this.email = email;
-    this.username = username;
     this.firstName = firstName;
     this.lastName = lastName;
     this.birthDate = birthDate;
@@ -107,16 +98,6 @@ export class UpdateProfileDto {
   @IsOptional()
   @IsEmail({}, { message: "Format d'email invalide" })
   email?: string;
-
-  @ApiPropertyOptional({
-    description: "Le nom d'utilisateur",
-    example: 'JohnDoe51',
-  })
-  @IsOptional()
-  @IsString({ message: "Le nom d'utilisateur doit être une chaîne de caractères" })
-  @MinLength(1, { message: "Le nom d'utilisateur ne peut pas être vide" })
-  @MaxLength(50, { message: "Le nom d'utilisateur ne peut pas dépasser 50 caractères" })
-  username?: string;
 
   @ApiPropertyOptional({
     description: 'La date de naissance (format ISO 8601)',

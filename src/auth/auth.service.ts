@@ -80,7 +80,7 @@ export class AuthService {
   async googleLogin(user: {
     email: string;
     googleId: string;
-    username: string;
+    firstName: string;
   }): Promise<AuthResponseDto> {
     let existing = await this.prisma.user.findUnique({
       where: { email: user.email },
@@ -104,7 +104,7 @@ export class AuthService {
         data: {
           email: user.email,
           googleId: user.googleId,
-          username: user.username,
+          firstName: user.firstName,
         },
       });
     }
