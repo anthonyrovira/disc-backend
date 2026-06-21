@@ -411,6 +411,10 @@ export class FormService {
     if (form.user_id) {
       await this.linkFormToOrganizations(formId, form.user_id);
     }
+
+    if (form.participantId) {
+      await this.linkFormToOrganizationsForParticipant(formId, form.participantId);
+    }
   }
 
   private async linkFormToOrganizations(
@@ -433,6 +437,25 @@ export class FormService {
         organizationId: m.organizationId,
       })),
       skipDuplicates: true,
+    });
+  }
+
+  private async linkFormToOrganizationsForParticipant(
+    formId: string,
+    participantId: string,
+  ): Promise<void> {
+    const participant = await this.prisma.participant.findUnique({
+      where: { id: participantId },
+      select: { organizationId: true },
+    });
+
+    if (!participant) return;
+
+    await this.prisma.formOrganization.create({
+      data: {
+        formId,
+        organizationId: participant.organizationId,
+      },
     });
   }
 
