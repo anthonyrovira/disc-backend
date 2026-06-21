@@ -11,6 +11,7 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { OrganizationRole } from '../../../generated/prisma/client';
+import type { ParticipantStatus } from '../../../generated/prisma/client';
 
 export class CreateOrganizationDto {
   @ApiProperty({
@@ -20,6 +21,27 @@ export class CreateOrganizationDto {
   @IsString({ message: 'Le nom doit être une chaîne de caractères' })
   @IsNotEmpty({ message: 'Le nom ne peut pas être vide' })
   name: string;
+}
+
+export class PendingTransferDto {
+  @ApiProperty({
+    description: 'The user ID of the designated new owner',
+    example: 'f8e8d1e0-7e6e-11ea-bc55-0242ac130003',
+  })
+  @Allow()
+  toUserId: string;
+
+  @ApiProperty({
+    description: 'The full name of the designated new owner',
+    example: 'Jane Doe',
+  })
+  @Allow()
+  toUserName: string;
+
+  constructor(data: { toUserId: string; toUserName: string }) {
+    this.toUserId = data.toUserId;
+    this.toUserName = data.toUserName;
+  }
 }
 
 export class OrganizationResponseDto {
@@ -46,10 +68,25 @@ export class OrganizationResponseDto {
   @Type(() => Date)
   createdAt: Date;
 
-  constructor(data: { id: string; name: string; createdAt: Date }) {
+  @ApiPropertyOptional({
+    description: 'Pending ownership transfer, if any',
+    type: PendingTransferDto,
+    nullable: true,
+  })
+  @IsOptional()
+  @Allow()
+  pendingTransfer?: PendingTransferDto | null;
+
+  constructor(data: {
+    id: string;
+    name: string;
+    createdAt: Date;
+    pendingTransfer?: PendingTransferDto | null;
+  }) {
     this.id = data.id;
     this.name = data.name;
     this.createdAt = data.createdAt;
+    this.pendingTransfer = data.pendingTransfer ?? null;
   }
 }
 
@@ -82,29 +119,40 @@ export class OrganizationWithRoleDto {
     enum: OrganizationRole,
     example: 'OWNER',
   })
-  @IsEnum(OrganizationRole, { message: 'Le rôle doit être un rôle valide (OWNER, MANAGER, MEMBER ou CANDIDATE)' })
+  @IsEnum(OrganizationRole, { message: 'Le rôle doit être OWNER ou MANAGER' })
   role: OrganizationRole;
+
+  @ApiPropertyOptional({
+    description: 'Pending ownership transfer, if any',
+    type: PendingTransferDto,
+    nullable: true,
+  })
+  @IsOptional()
+  @Allow()
+  pendingTransfer?: PendingTransferDto | null;
 
   constructor(data: {
     id: string;
     name: string;
     createdAt: Date;
     role: OrganizationRole;
+    pendingTransfer?: PendingTransferDto | null;
   }) {
     this.id = data.id;
     this.name = data.name;
     this.createdAt = data.createdAt;
     this.role = data.role;
+    this.pendingTransfer = data.pendingTransfer ?? null;
   }
 }
 
 export class MemberDto {
   @ApiProperty({
-    description: 'The user ID',
+    description: 'The user ID (for OWNER/MANAGER) or participant ID (for EMPLOYEE)',
     example: 'f8e8d1e0-7e6e-11ea-bc55-0242ac130003',
   })
   @Allow()
-  userId: string;
+  id: string;
 
   @ApiProperty({
     description: 'The email of the member',
@@ -128,12 +176,25 @@ export class MemberDto {
   lastName?: string;
 
   @ApiProperty({
-    description: 'The role of the member in the organization',
-    enum: OrganizationRole,
-    example: 'MEMBER',
+    description: 'The role or status of the member',
+    example: 'EMPLOYEE',
   })
-  @IsEnum(OrganizationRole, { message: 'Le rôle doit être un rôle valide (OWNER, MANAGER, MEMBER ou CANDIDATE)' })
-  role: OrganizationRole;
+  @Allow()
+  role: string;
+
+  @ApiPropertyOptional({
+    description: 'Team ID if assigned to a team',
+  })
+  @IsOptional()
+  @Allow()
+  teamId?: string;
+
+  @ApiPropertyOptional({
+    description: 'Team name if assigned to a team',
+  })
+  @IsOptional()
+  @Allow()
+  teamName?: string;
 
   @ApiProperty({
     description: 'The date when the member joined',
@@ -154,32 +215,26 @@ export class MemberDto {
   lastTestDate?: Date;
 
   constructor(data: {
-    userId: string;
+    id: string;
     email: string;
     firstName?: string;
     lastName?: string;
-    role: OrganizationRole;
+    role: string;
+    teamId?: string;
+    teamName?: string;
     joinedAt: Date;
     lastTestDate?: Date;
   }) {
-    this.userId = data.userId;
+    this.id = data.id;
     this.email = data.email;
     this.firstName = data.firstName;
     this.lastName = data.lastName;
     this.role = data.role;
+    this.teamId = data.teamId;
+    this.teamName = data.teamName;
     this.joinedAt = data.joinedAt;
     this.lastTestDate = data.lastTestDate;
   }
-}
-
-export class UpdateMemberRoleDto {
-  @ApiProperty({
-    description: 'The new role for the member',
-    enum: [OrganizationRole.MANAGER, OrganizationRole.MEMBER],
-    example: 'MANAGER',
-  })
-  @IsEnum(OrganizationRole, { message: 'Le rôle doit être MANAGER ou MEMBER' })
-  role: OrganizationRole;
 }
 
 export class TransferOwnershipDto {
@@ -193,9 +248,9 @@ export class TransferOwnershipDto {
 }
 
 export class MemberResultDto {
-  @ApiProperty({ description: 'The user ID' })
+  @ApiProperty({ description: 'The user or participant ID' })
   @Allow()
-  userId: string;
+  id: string;
 
   @ApiProperty({ description: 'The email of the member' })
   @Allow()
@@ -228,7 +283,7 @@ export class MemberResultDto {
   C: number;
 
   constructor(data: {
-    userId: string;
+    id: string;
     email: string;
     firstName?: string;
     lastName?: string;
@@ -237,7 +292,7 @@ export class MemberResultDto {
     S: number;
     C: number;
   }) {
-    this.userId = data.userId;
+    this.id = data.id;
     this.email = data.email;
     this.firstName = data.firstName;
     this.lastName = data.lastName;
@@ -281,5 +336,146 @@ export class DashboardResultDto {
     this.averageScores = data.averageScores;
     this.members = data.members;
     this.total = data.total;
+  }
+}
+
+export class SimulateTeamDto {
+  @ApiProperty({
+    description: 'The participant ID (CANDIDATE) to simulate inclusion of',
+    example: 'f8e8d1e0-7e6e-11ea-bc55-0242ac130003',
+  })
+  @IsUUID('all', { message: "L'identifiant du participant doit être un UUID valide" })
+  @IsNotEmpty({ message: "L'identifiant du participant ne peut pas être vide" })
+  participantId: string;
+}
+
+export class CreateTeamDto {
+  @ApiProperty({
+    description: 'The name of the team',
+    example: 'Engineering',
+  })
+  @IsString({ message: 'Le nom doit être une chaîne de caractères' })
+  @IsNotEmpty({ message: 'Le nom ne peut pas être vide' })
+  name: string;
+}
+
+export class TeamResponseDto {
+  @ApiProperty({
+    description: 'The unique identifier of the team',
+    example: 'f8e8d1e0-7e6e-11ea-bc55-0242ac130003',
+  })
+  @Allow()
+  id: string;
+
+  @ApiProperty({
+    description: 'The name of the team',
+    example: 'Engineering',
+  })
+  @Allow()
+  name: string;
+
+  @ApiProperty({
+    description: 'The date when the team was created',
+    example: '2024-01-15T10:00:00Z',
+  })
+  @Allow()
+  @IsDate()
+  @Type(() => Date)
+  createdAt: Date;
+
+  constructor(data: { id: string; name: string; createdAt: Date }) {
+    this.id = data.id;
+    this.name = data.name;
+    this.createdAt = data.createdAt;
+  }
+}
+
+export class UpdateParticipantTeamDto {
+  @ApiPropertyOptional({
+    description: 'Team ID to assign the participant to',
+    example: 'f8e8d1e0-7e6e-11ea-bc55-0242ac130003',
+  })
+  @IsOptional()
+  @IsUUID('all', { message: "L'identifiant de l'équipe doit être un UUID valide" })
+  teamId?: string;
+}
+
+export class ParticipantResponseDto {
+  @ApiProperty({
+    description: 'The unique identifier of the participant',
+    example: 'f8e8d1e0-7e6e-11ea-bc55-0242ac130003',
+  })
+  @Allow()
+  id: string;
+
+  @ApiProperty({ description: 'The email of the participant' })
+  @Allow()
+  email: string;
+
+  @ApiProperty({ description: 'The first name of the participant' })
+  @Allow()
+  firstName: string;
+
+  @ApiPropertyOptional({ description: 'The last name of the participant' })
+  @IsOptional()
+  @Allow()
+  lastName?: string;
+
+  @ApiProperty({ description: 'The status of the participant', example: 'CANDIDATE' })
+  @Allow()
+  status: string;
+
+  @ApiPropertyOptional({
+    description: 'Team ID if assigned',
+  })
+  @IsOptional()
+  @Allow()
+  teamId?: string;
+
+  @ApiPropertyOptional({
+    description: 'Team name if assigned',
+  })
+  @IsOptional()
+  @Allow()
+  teamName?: string;
+
+  @ApiProperty({
+    description: 'The date when the participant was created',
+    example: '2024-01-15T10:00:00Z',
+  })
+  @Allow()
+  @IsDate()
+  @Type(() => Date)
+  createdAt: Date;
+
+  @ApiPropertyOptional({
+    description: 'Date of the most recent completed test',
+  })
+  @IsOptional()
+  @Allow()
+  @IsDate()
+  @Type(() => Date)
+  lastTestDate?: Date;
+
+  constructor(data: {
+    id: string;
+    email: string;
+    firstName: string;
+    lastName?: string;
+    status: string;
+    teamId?: string;
+    teamName?: string;
+    createdAt: Date;
+    lastTestDate?: Date;
+  }) {
+    this.id = data.id;
+    this.email = data.email;
+    this.firstName = data.firstName;
+    this.lastName = data.lastName;
+    this.status = data.status;
+    this.teamId = data.teamId;
+    this.teamName = data.teamName;
+    this.createdAt = data.createdAt;
+    this.lastTestDate = data.lastTestDate;
   }
 }
