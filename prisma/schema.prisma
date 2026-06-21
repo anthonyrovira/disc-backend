@@ -23,14 +23,12 @@ enum FormStatus {
 enum OrganizationRole {
     OWNER
     MANAGER
-    MEMBER
-    CANDIDATE
 }
 
-enum InvitationType {
-    TEAM_MEMBER
+enum InvitationTargetStatus {
     CANDIDATE
-    REFERRAL
+    EMPLOYEE
+    MANAGER
 }
 
 enum InvitationStatus {
@@ -46,6 +44,11 @@ enum OwnershipTransferStatus {
     CANCELLED
 }
 
+enum ParticipantStatus {
+    CANDIDATE
+    EMPLOYEE
+}
+
 model User {
     id            String         @id @default(uuid())
     firstName     String
@@ -59,6 +62,7 @@ model User {
     RefreshToken  RefreshToken[]
     memberships   OrganizationMembership[]
     invitedMemberships OrganizationMembership[] @relation("InvitedBy")
+    invitedParticipants Participant[] @relation("ParticipantInvitedBy")
     sentInvitations   Invitation[]
     transfersInitiated OwnershipTransfer[] @relation("TransferFrom")
     transfersReceived  OwnershipTransfer[] @relation("TransferTo")
@@ -101,26 +105,68 @@ model Organization {
     name      String
     createdAt DateTime                  @default(now())
     members   OrganizationMembership[]
+    teams     Team[]
+    participants Participant[]
     invitations Invitation[]
     ownershipTransfers OwnershipTransfer[]
     formLinks FormOrganization[]
+}
+
+model Team {
+    id             String   @id @default(uuid())
+    organizationId String
+    name           String
+    createdAt      DateTime @default(now())
+
+    organization   Organization           @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+    memberships    OrganizationMembership[]
+    participants   Participant[]
+    invitations    Invitation[]
+
+    @@unique([organizationId, name])
+    @@index([organizationId])
+}
+
+model Participant {
+    id              String             @id @default(uuid())
+    organizationId  String
+    teamId          String?
+    email           String
+    firstName       String
+    lastName        String?
+    status          ParticipantStatus
+    invitedByUserId String
+    createdAt       DateTime           @default(now())
+
+    organization    Organization        @relation(fields: [organizationId], references: [id])
+    team            Team?               @relation(fields: [teamId], references: [id])
+    invitedBy       User                @relation("ParticipantInvitedBy", fields: [invitedByUserId], references: [id])
+    forms           Form[]
+
+    @@unique([organizationId, email])
+    @@index([organizationId])
+    @@index([teamId])
+    @@index([email])
 }
 
 model OrganizationMembership {
     id             String           @id @default(cuid())
     userId         String
     organizationId String
+    teamId         String?
     role           OrganizationRole
     invitedById    String?
     joinedAt       DateTime         @default(now())
 
     user         User              @relation(fields: [userId], references: [id], onDelete: Cascade)
     organization Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+    team         Team?             @relation(fields: [teamId], references: [id])
     invitedBy    User?             @relation("InvitedBy", fields: [invitedById], references: [id])
 
     @@unique([userId, organizationId])
     @@index([userId])
     @@index([organizationId])
+    @@index([teamId])
 }
 
 model OwnershipTransfer {
@@ -141,23 +187,28 @@ model OwnershipTransfer {
 }
 
 model Invitation {
-    id              String           @id @default(uuid())
+    id              String                  @id @default(uuid())
     email           String
-    type            InvitationType
-    status          InvitationStatus @default(PENDING)
-    token           String           @unique
-    organizationId  String?
+    firstName       String
+    lastName        String?
+    targetStatus    InvitationTargetStatus
+    status          InvitationStatus        @default(PENDING)
+    token           String                  @unique
+    organizationId  String
+    teamId          String?
     invitedByUserId String
     expiresAt       DateTime
     acceptedAt      DateTime?
     formId          String?
-    createdAt       DateTime         @default(now())
+    createdAt       DateTime                @default(now())
 
-    organization Organization? @relation(fields: [organizationId], references: [id])
-    invitedBy    User          @relation(fields: [invitedByUserId], references: [id])
-    form         Form?         @relation(fields: [formId], references: [id])
+    organization Organization @relation(fields: [organizationId], references: [id])
+    team         Team?        @relation(fields: [teamId], references: [id])
+    invitedBy    User         @relation(fields: [invitedByUserId], references: [id])
+    form         Form?        @relation(fields: [formId], references: [id])
 
     @@index([organizationId])
+    @@index([teamId])
     @@index([invitedByUserId])
     @@index([email])
     @@index([status])
@@ -169,6 +220,8 @@ model Form {
     status     FormStatus     @default(in_progress)
     User       User?          @relation(fields: [user_id], references: [id])
     user_id    String?
+    Participant Participant? @relation(fields: [participantId], references: [id])
+    participantId String?
     answers    Answer[]
     questions  FormQuestion[]
     invitations Invitation[]
@@ -177,6 +230,7 @@ model Form {
     updated_at DateTime?
 
     @@index([user_id])
+    @@index([participantId])
 }
 
 model FormOrganization {
