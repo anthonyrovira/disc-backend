@@ -7,6 +7,7 @@ import {
   Param,
   Post,
   UseGuards,
+  ValidationPipe,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -21,6 +22,9 @@ import {
   InvitationResponseDto,
   InvitationPreviewDto,
   CreateInvitationDto,
+  AcceptInvitationResponseDto,
+  SetupPasswordDto,
+  SetupPasswordResponseDto,
 } from './dto/invitations.dto';
 import { InvitationsService } from './invitations.service';
 import { JwtGuard } from '@/auth/guard/jwt.guard';
@@ -64,17 +68,26 @@ export class InvitationsController {
   }
 
   @Post(':token/accept')
-  @UseGuards(JwtGuard)
-  @ApiBearerAuth()
-  @ApiNoContentResponse()
-  @ApiOperation({ summary: 'Accept an invitation' })
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({ type: AcceptInvitationResponseDto })
+  @ApiOperation({ summary: 'Accept an invitation (public)' })
   @ApiParam({ name: 'token', description: 'Invitation token' })
-  @HttpCode(HttpStatus.NO_CONTENT)
   async accept(
-    @GetUser() user: UserDto,
     @Param('token') token: string,
-  ): Promise<void> {
-    await this.invitationsService.accept(token, user.id, user.email);
+  ): Promise<AcceptInvitationResponseDto> {
+    return this.invitationsService.accept(token);
+  }
+
+  @Post(':token/setup-password')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiCreatedResponse({ type: SetupPasswordResponseDto })
+  @ApiOperation({ summary: 'Set up password for MANAGER invitation (public)' })
+  @ApiParam({ name: 'token', description: 'Invitation token' })
+  async setupPassword(
+    @Param('token') token: string,
+    @Body(new ValidationPipe({ transform: true })) dto: SetupPasswordDto,
+  ): Promise<SetupPasswordResponseDto> {
+    return this.invitationsService.setupPassword(token, dto.password);
   }
 
   @Post(':token/revoke')

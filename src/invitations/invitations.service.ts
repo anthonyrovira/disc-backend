@@ -7,10 +7,12 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { randomBytes } from 'crypto';
+import * as argon2 from 'argon2';
 import {
-  InvitationType,
+  InvitationTargetStatus,
   InvitationStatus,
   OrganizationRole,
+  ParticipantStatus,
 } from '../../generated/prisma/client';
 import { PrismaService } from '@/common/prisma/prisma.service';
 import { EmailService } from '@/email';
@@ -18,7 +20,10 @@ import {
   CreateInvitationDto,
   InvitationResponseDto,
   InvitationPreviewDto,
+  AcceptInvitationResponseDto,
+  SetupPasswordResponseDto,
 } from './dto/invitations.dto';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class InvitationsService {
@@ -27,6 +32,7 @@ export class InvitationsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly emailService: EmailService,
+    private readonly jwtService: JwtService,
   ) {}
 
   async create(
@@ -38,10 +44,6 @@ export class InvitationsService {
       throw new ForbiddenException('You cannot invite yourself');
     }
 
-    if (dto.type === InvitationType.REFERRAL) {
-      return this.createReferral(userId, dto);
-    }
-
     return this.createOrgInvitation(userId, dto);
   }
 
@@ -49,12 +51,6 @@ export class InvitationsService {
     userId: string,
     dto: CreateInvitationDto,
   ): Promise<InvitationResponseDto> {
-    if (!dto.organizationId) {
-      throw new ForbiddenException(
-        'organizationId is required for TEAM_MEMBER and CANDIDATE invitations',
-      );
-    }
-
     const membership = await this.prisma.organizationMembership.findUnique({
       where: {
         userId_organizationId: {
@@ -94,17 +90,16 @@ export class InvitationsService {
       );
     }
 
-    return this.createInvitationRecord(userId, dto);
-  }
+    if (dto.teamId) {
+      const team = await this.prisma.team.findFirst({
+        where: { id: dto.teamId, organizationId: dto.organizationId },
+      });
+      if (!team) {
+        throw new NotFoundException('Team not found in this organization');
+      }
+    }
 
-  private async createReferral(
-    userId: string,
-    dto: CreateInvitationDto,
-  ): Promise<InvitationResponseDto> {
-    return this.createInvitationRecord(userId, {
-      ...dto,
-      organizationId: undefined,
-    });
+    return this.createInvitationRecord(userId, dto);
   }
 
   private async createInvitationRecord(
@@ -117,25 +112,32 @@ export class InvitationsService {
     const invitation = await this.prisma.invitation.create({
       data: {
         email: dto.email.toLowerCase(),
-        type: dto.type,
+        firstName: dto.firstName,
+        lastName: dto.lastName ?? null,
+        targetStatus: dto.targetStatus,
         status: InvitationStatus.PENDING,
         token,
-        organizationId: dto.organizationId ?? null,
+        organizationId: dto.organizationId,
+        teamId: dto.teamId ?? null,
         invitedByUserId: userId,
         expiresAt,
       },
       include: {
         organization: { select: { name: true } },
+        team: { select: { name: true } },
       },
     });
 
     const response = new InvitationResponseDto({
       id: invitation.id,
       email: invitation.email,
-      type: invitation.type as InvitationType,
+      firstName: invitation.firstName,
+      lastName: invitation.lastName ?? undefined,
+      targetStatus: invitation.targetStatus as InvitationTargetStatus,
       status: invitation.status as InvitationStatus,
       token: invitation.token,
-      organizationName: invitation.organization?.name,
+      organizationName: invitation.organization.name,
+      teamName: invitation.team?.name,
       invitedByUserId: invitation.invitedByUserId,
       expiresAt: invitation.expiresAt,
       createdAt: invitation.createdAt,
@@ -150,8 +152,10 @@ export class InvitationsService {
     userId: string,
     invitation: {
       email: string;
-      type: InvitationType;
+      firstName: string;
+      targetStatus: InvitationTargetStatus;
       organization?: { name: string } | null;
+      team?: { name: string } | null;
     },
     token: string,
   ): Promise<void> {
@@ -170,31 +174,31 @@ export class InvitationsService {
         ? `${inviter.firstName} ${inviter.lastName}`
         : inviter.firstName;
 
-      const orgName = invitation.organization?.name;
+      const orgName = invitation.organization?.name ?? 'une organisation';
       const invitationUrl = `${this.emailService.appUrl}/invitations/${token}`;
 
       const templateConfigs: Record<
-        InvitationType,
+        InvitationTargetStatus,
         { template: string; subject: string } | undefined
       > = {
-        [InvitationType.TEAM_MEMBER]: {
-          template: 'team-member-invitation',
-          subject: `${inviterName} vous invite à rejoindre ${orgName ?? 'une organisation'} sur DISC.dev`,
-        },
-        [InvitationType.CANDIDATE]: {
+        [InvitationTargetStatus.CANDIDATE]: {
           template: 'candidate-invitation',
-          subject: `Test DISC — ${orgName ?? 'une organisation'} vous sollicite`,
+          subject: `Test DISC — ${orgName} vous sollicite`,
         },
-        [InvitationType.REFERRAL]: {
-          template: 'referral-invitation',
-          subject: `${inviterName} vous recommande DISC.dev`,
+        [InvitationTargetStatus.EMPLOYEE]: {
+          template: 'team-member-invitation',
+          subject: `${inviterName} vous invite à rejoindre ${orgName} sur DISC.dev`,
+        },
+        [InvitationTargetStatus.MANAGER]: {
+          template: 'team-member-invitation',
+          subject: `${inviterName} vous invite à gérer ${orgName} sur DISC.dev`,
         },
       };
 
-      const config = templateConfigs[invitation.type];
+      const config = templateConfigs[invitation.targetStatus];
 
       if (!config) {
-        this.logger.warn(`No email template for invitation type ${invitation.type}`);
+        this.logger.warn(`No email template for invitation target status ${invitation.targetStatus}`);
         return;
       }
 
@@ -221,6 +225,7 @@ export class InvitationsService {
       where: { invitedByUserId: userId },
       include: {
         organization: { select: { name: true } },
+        team: { select: { name: true } },
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -230,10 +235,13 @@ export class InvitationsService {
         new InvitationResponseDto({
           id: inv.id,
           email: inv.email,
-          type: inv.type as InvitationType,
+          firstName: inv.firstName,
+          lastName: inv.lastName ?? undefined,
+          targetStatus: inv.targetStatus as InvitationTargetStatus,
           status: inv.status as InvitationStatus,
           token: inv.token,
-          organizationName: inv.organization?.name,
+          organizationName: inv.organization.name,
+          teamName: inv.team?.name,
           invitedByUserId: inv.invitedByUserId,
           expiresAt: inv.expiresAt,
           createdAt: inv.createdAt,
@@ -246,6 +254,7 @@ export class InvitationsService {
       where: { token },
       include: {
         organization: { select: { name: true } },
+        team: { select: { name: true } },
       },
     });
 
@@ -257,8 +266,11 @@ export class InvitationsService {
 
     return new InvitationPreviewDto({
       email: invitation.email,
-      type: invitation.type as InvitationType,
-      organizationName: invitation.organization?.name,
+      firstName: invitation.firstName,
+      lastName: invitation.lastName ?? undefined,
+      targetStatus: invitation.targetStatus as InvitationTargetStatus,
+      organizationName: invitation.organization.name,
+      teamName: invitation.team?.name,
       status: invitation.status as InvitationStatus,
       expiresAt: invitation.expiresAt,
       expired,
@@ -288,26 +300,17 @@ export class InvitationsService {
     });
   }
 
-  async accept(
-    token: string,
-    userId: string,
-    userEmail: string,
-  ): Promise<void> {
+  private async validateInvitation(token: string) {
     const invitation = await this.prisma.invitation.findUnique({
       where: { token },
       include: {
         organization: { select: { name: true } },
+        team: { select: { name: true } },
       },
     });
 
     if (!invitation) {
       throw new NotFoundException('Invitation not found');
-    }
-
-    if (invitation.email.toLowerCase() !== userEmail.toLowerCase()) {
-      throw new ForbiddenException(
-        'This invitation was sent to a different email address',
-      );
     }
 
     if (invitation.expiresAt < new Date()) {
@@ -323,10 +326,27 @@ export class InvitationsService {
     }
 
     if (invitation.status === InvitationStatus.ACCEPTED) {
-      return;
+      throw new ConflictException('This invitation has already been accepted');
     }
 
-    await this.prisma.$transaction(async (tx) => {
+    return invitation;
+  }
+
+  async accept(token: string): Promise<AcceptInvitationResponseDto> {
+    const invitation = await this.validateInvitation(token);
+
+    const targetStatus = invitation.targetStatus as InvitationTargetStatus;
+
+    if (targetStatus === InvitationTargetStatus.MANAGER) {
+      return new AcceptInvitationResponseDto({
+        token,
+        targetStatus: InvitationTargetStatus.MANAGER,
+      });
+    }
+
+    const isCandidate = targetStatus === InvitationTargetStatus.CANDIDATE;
+
+    const result = await this.prisma.$transaction(async (tx) => {
       await tx.invitation.update({
         where: { id: invitation.id },
         data: {
@@ -335,40 +355,161 @@ export class InvitationsService {
         },
       });
 
-      if (invitation.organizationId) {
-        const role =
-          invitation.type === InvitationType.CANDIDATE
-            ? OrganizationRole.CANDIDATE
-            : OrganizationRole.MEMBER;
+      const participant = await tx.participant.create({
+        data: {
+          organizationId: invitation.organizationId,
+          teamId: invitation.teamId,
+          email: invitation.email,
+          firstName: invitation.firstName,
+          lastName: invitation.lastName,
+          status: isCandidate ? ParticipantStatus.CANDIDATE : ParticipantStatus.EMPLOYEE,
+          invitedByUserId: invitation.invitedByUserId,
+        },
+      });
 
-        const existingMembership = await tx.organizationMembership.findUnique({
-          where: {
-            userId_organizationId: {
-              userId,
-              organizationId: invitation.organizationId,
-            },
-          },
-        });
+      const form = await tx.form.create({
+        data: {
+          name: 'disc_form',
+          participantId: participant.id,
+          status: 'in_progress',
+          created_at: new Date(),
+        },
+      });
 
-        if (!existingMembership) {
-          await tx.organizationMembership.create({
-            data: {
-              userId,
-              organizationId: invitation.organizationId,
-              role,
-              invitedById: invitation.invitedByUserId,
-            },
-          });
-        }
-      }
+      const allQuestions = await tx.question.findMany({
+        select: { id: true },
+      });
+
+      const shuffled = this.shuffle(allQuestions.map((q) => q.id)).slice(0, 30);
+
+      await tx.formQuestion.createMany({
+        data: shuffled.map((questionId, index) => ({
+          formId: form.id,
+          questionId,
+          order: index + 1,
+        })),
+      });
+
+      const generatedName = this.generateFormName();
+      await tx.form.update({
+        where: { id: form.id },
+        data: { name: generatedName },
+      });
+
+      await tx.invitation.update({
+        where: { id: invitation.id },
+        data: { formId: form.id },
+      });
+
+      return form.id;
     });
 
-    if (
-      invitation.type === InvitationType.TEAM_MEMBER &&
-      invitation.organizationId
-    ) {
-      await this.notifyInviterOnAccept(invitation, userEmail);
+    const redirectUrl = `${this.emailService.appUrl}/form/${result}`;
+
+    await this.notifyInviterOnAccept(invitation, invitation.email);
+
+    return new AcceptInvitationResponseDto({
+      token,
+      targetStatus: InvitationTargetStatus.CANDIDATE,
+      formId: result,
+      redirectUrl,
+    });
+  }
+
+  async setupPassword(
+    token: string,
+    password: string,
+  ): Promise<SetupPasswordResponseDto> {
+    const invitation = await this.validateInvitation(token);
+
+    if (invitation.targetStatus !== InvitationTargetStatus.MANAGER) {
+      throw new ForbiddenException(
+        'Password setup is only available for MANAGER invitations',
+      );
     }
+
+    const existingUser = await this.prisma.user.findUnique({
+      where: { email: invitation.email },
+    });
+
+    if (existingUser) {
+      throw new ConflictException(
+        'A user with this email already exists',
+      );
+    }
+
+    const hash = await argon2.hash(password);
+
+    const result = await this.prisma.$transaction(async (tx) => {
+      const user = await tx.user.create({
+        data: {
+          email: invitation.email,
+          firstName: invitation.firstName,
+          lastName: invitation.lastName,
+          hash,
+        },
+      });
+
+      await tx.organizationMembership.create({
+        data: {
+          userId: user.id,
+          organizationId: invitation.organizationId,
+          teamId: invitation.teamId,
+          role: OrganizationRole.MANAGER,
+          invitedById: invitation.invitedByUserId,
+        },
+      });
+
+      const form = await tx.form.create({
+        data: {
+          name: 'disc_form',
+          user_id: user.id,
+          status: 'in_progress',
+          created_at: new Date(),
+        },
+      });
+
+      const allQuestions = await tx.question.findMany({
+        select: { id: true },
+      });
+
+      const shuffled = this.shuffle(allQuestions.map((q) => q.id)).slice(0, 30);
+
+      await tx.formQuestion.createMany({
+        data: shuffled.map((questionId, index) => ({
+          formId: form.id,
+          questionId,
+          order: index + 1,
+        })),
+      });
+
+      const generatedName = this.generateFormName();
+      await tx.form.update({
+        where: { id: form.id },
+        data: { name: generatedName },
+      });
+
+      await tx.invitation.update({
+        where: { id: invitation.id },
+        data: {
+          status: InvitationStatus.ACCEPTED,
+          acceptedAt: new Date(),
+          formId: form.id,
+        },
+      });
+
+      const accessToken = this.jwtService.sign({
+        sub: user.id,
+        email: user.email,
+      });
+
+      return { accessToken, formId: form.id };
+    });
+
+    return new SetupPasswordResponseDto({
+      accessToken: result.accessToken,
+      formId: result.formId,
+    });
   }
 
   private async notifyInviterOnAccept(
@@ -413,5 +554,22 @@ export class InvitationsService {
         err instanceof Error ? err.message : String(err),
       );
     }
+  }
+
+  private generateFormName(): string {
+    const now = new Date();
+    const day = String(now.getDate()).padStart(2, '0');
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const year = now.getFullYear();
+    return `Test DISC - ${day}/${month}/${year}`;
+  }
+
+  private shuffle(array: string[]): string[] {
+    const arr = [...array];
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
   }
 }
