@@ -8,15 +8,18 @@ const prisma = new PrismaClient({ adapter });
 
 async function main() {
   await prisma.$executeRawUnsafe('DELETE FROM "FormOrganization"');
+  await prisma.$executeRawUnsafe('DELETE FROM "OwnershipTransfer"');
   await prisma.$executeRawUnsafe('DELETE FROM "Invitation"');
-  await prisma.$executeRawUnsafe('DELETE FROM "OrganizationMembership"');
-  await prisma.$executeRawUnsafe('DELETE FROM "Organization"');
   await prisma.$executeRawUnsafe('DELETE FROM "Answer"');
   await prisma.$executeRawUnsafe('DELETE FROM "FormQuestion"');
   await prisma.$executeRawUnsafe('DELETE FROM "Form"');
-  await prisma.$executeRawUnsafe('DELETE FROM "RefreshToken"');
   await prisma.$executeRawUnsafe('DELETE FROM "Option"');
   await prisma.$executeRawUnsafe('DELETE FROM "Question"');
+  await prisma.$executeRawUnsafe('DELETE FROM "Participant"');
+  await prisma.$executeRawUnsafe('DELETE FROM "Team"');
+  await prisma.$executeRawUnsafe('DELETE FROM "OrganizationMembership"');
+  await prisma.$executeRawUnsafe('DELETE FROM "Organization"');
+  await prisma.$executeRawUnsafe('DELETE FROM "RefreshToken"');
   await prisma.$executeRawUnsafe('DELETE FROM "User"');
   console.log('Tables cleared');
 
