@@ -7,7 +7,6 @@ import { SendEmailOptions } from './interfaces/email.interfaces';
 import GenericEmail from './templates/GenericEmail';
 import TeamMemberInvitationEmail from './templates/TeamMemberInvitationEmail';
 import CandidateInvitationEmail from './templates/CandidateInvitationEmail';
-import ReferralInvitationEmail from './templates/ReferralInvitationEmail';
 import InvitationAcceptedEmail from './templates/InvitationAcceptedEmail';
 
 @Injectable()
@@ -33,7 +32,6 @@ export class EmailService {
     this.templates.set('generic', GenericEmail);
     this.templates.set('team-member-invitation', TeamMemberInvitationEmail);
     this.templates.set('candidate-invitation', CandidateInvitationEmail);
-    this.templates.set('referral-invitation', ReferralInvitationEmail);
     this.templates.set('invitation-accepted', InvitationAcceptedEmail);
   }
 
