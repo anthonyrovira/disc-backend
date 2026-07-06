@@ -1,6 +1,5 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '@/common/prisma/prisma.service';
-import type { PrismaTransaction } from '@/common/prisma/prisma.service';
 import {
   AnswerProgressDto,
   AnswerResponseDto,
@@ -40,11 +39,7 @@ export class FormService {
     return this.createForm(name, userId);
   }
 
-  async initAnonForm(name: string): Promise<Form> {
-    return this.createForm(name, null);
-  }
-
-  private async createForm(name: string, userId: string | null): Promise<Form> {
+  private async createForm(name: string, userId: string): Promise<Form> {
     const allQuestions = await this.prisma.question.findMany({
       select: { id: true },
     });
@@ -78,31 +73,6 @@ export class FormService {
     const month = String(now.getMonth() + 1).padStart(2, '0');
     const year = now.getFullYear();
     return `Test DISC - ${day}/${month}/${year}`;
-  }
-
-  async claimForm(formId: string, userId: string): Promise<Form> {
-    return this.prisma.$transaction(async (tx) => {
-      const form = await tx.form.findUnique({ where: { id: formId } });
-
-      if (!form) {
-        throw new NotFoundException(`Form with ID ${formId} not found`);
-      }
-
-      if (form.user_id !== null) {
-        throw new ConflictException('This form is already associated with an account');
-      }
-
-      const updated = await tx.form.update({
-        where: { id: formId },
-        data: { user_id: userId, updated_at: new Date() },
-      });
-
-      if (updated.status === 'completed') {
-        await this.linkFormToOrganizations(formId, userId, tx);
-      }
-
-      return updated;
-    });
   }
 
   async getNextQuestion(formId: string) {
@@ -362,28 +332,6 @@ export class FormService {
     await this.prisma.form.delete({ where: { id: formId } });
   }
 
-  async cleanupOrphanedForms(): Promise<number> {
-    const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000);
-
-    const orphans = await this.prisma.form.findMany({
-      where: {
-        user_id: null,
-        created_at: { lt: cutoff },
-      },
-      select: { id: true },
-    });
-
-    if (orphans.length === 0) return 0;
-
-    const ids = orphans.map((f) => f.id);
-
-    await this.prisma.answer.deleteMany({ where: { form_id: { in: ids } } });
-    await this.prisma.formQuestion.deleteMany({ where: { formId: { in: ids } } });
-    await this.prisma.form.deleteMany({ where: { id: { in: ids } } });
-
-    return ids.length;
-  }
-
   private async getProgress(formId: string): Promise<AnswerProgressDto> {
     const total = await this.prisma.formQuestion.count({ where: { formId } });
     const answered = await this.prisma.formQuestion.count({
@@ -420,18 +368,15 @@ export class FormService {
   private async linkFormToOrganizations(
     formId: string,
     userId: string,
-    tx?: PrismaTransaction,
   ): Promise<void> {
-    const db = tx ?? this.prisma;
-
-    const memberships = await db.organizationMembership.findMany({
+    const memberships = await this.prisma.organizationMembership.findMany({
       where: { userId },
       select: { organizationId: true },
     });
 
     if (memberships.length === 0) return;
 
-    await db.formOrganization.createMany({
+    await this.prisma.formOrganization.createMany({
       data: memberships.map((m) => ({
         formId,
         organizationId: m.organizationId,

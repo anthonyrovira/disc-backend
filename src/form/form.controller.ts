@@ -21,6 +21,7 @@ import {
 import type { Response } from 'express';
 import { JwtGuard } from '@/auth/guard';
 import { OptionalJwtGuard } from '@/common/guards';
+import { FormAccessGuard } from './guards/form-access.guard';
 import { FormService } from './form.service';
 import { PdfGeneratorService } from './pdf/pdf-generator.service';
 import { GetUser } from '@/user';
@@ -54,6 +55,7 @@ export class FormController {
     return this.formService.getForms(user.id);
   }
 
+  @UseGuards(FormAccessGuard)
   @ApiOperation({ summary: 'Get the next unanswered question or the result' })
   @ApiResponse({ status: 200, description: 'Next question or final result' })
   @Get(':id/next')
@@ -61,6 +63,7 @@ export class FormController {
     return this.formService.getNextQuestion(id);
   }
 
+  @UseGuards(FormAccessGuard)
   @ApiOperation({ summary: 'Review a question and its current answer' })
   @ApiResponse({
     status: 200,
@@ -75,6 +78,7 @@ export class FormController {
     return this.formService.getFormQuestion(id, qId);
   }
 
+  @UseGuards(FormAccessGuard)
   @ApiOperation({ summary: 'Get DISC result for a form' })
   @ApiResponse({
     status: 200,
@@ -86,6 +90,7 @@ export class FormController {
     return this.formService.getDiscResult(id);
   }
 
+  @UseGuards(FormAccessGuard)
   @ApiOperation({ summary: 'Download DISC result as PDF' })
   @ApiProduces('application/pdf')
   @ApiResponse({
@@ -107,6 +112,7 @@ export class FormController {
     res.end(pdfBuffer);
   }
 
+  @UseGuards(FormAccessGuard)
   @ApiOperation({ summary: 'Get a form by id' })
   @ApiResponse({ status: '2XX', description: 'Form retrieved successfully' })
   @Get(':id')
@@ -124,25 +130,6 @@ export class FormController {
     @GetUser() user: UserDto,
   ): Promise<Form> {
     return this.formService.initForm(dto.name, user.id);
-  }
-
-  @ApiOperation({ summary: 'Create and initialize an anonymous form' })
-  @ApiResponse({ status: 201, description: 'Anonymous form created' })
-  @Post('init-anon')
-  async initAnonForm(@Body() dto: InitFormDto): Promise<Form> {
-    return this.formService.initAnonForm(dto.name);
-  }
-
-  @UseGuards(JwtGuard)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Claim an anonymous form' })
-  @ApiResponse({ status: 200, description: 'Form claimed successfully' })
-  @Patch(':id/claim')
-  async claimForm(
-    @Param('id') id: string,
-    @GetUser() user: UserDto,
-  ): Promise<Form> {
-    return this.formService.claimForm(id, user.id);
   }
 
   @UseGuards(JwtGuard)
@@ -171,6 +158,7 @@ export class FormController {
     return this.formService.updateFormName(id, user.id, dto.name);
   }
 
+  @UseGuards(FormAccessGuard)
   @ApiOperation({ summary: 'Submit an answer for a question' })
   @ApiResponse({
     status: 201,
@@ -189,6 +177,7 @@ export class FormController {
     );
   }
 
+  @UseGuards(FormAccessGuard)
   @ApiOperation({ summary: 'Update an existing answer' })
   @ApiResponse({
     status: 200,

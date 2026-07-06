@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { FormController } from './form.controller';
 import { FormService } from './form.service';
 import { PdfGeneratorService } from './pdf/pdf-generator.service';
+import { FormAccessGuard } from './guards/form-access.guard';
 import { InitFormDto } from './dto/form.dto';
 
 describe('FormController', () => {
@@ -36,7 +37,10 @@ describe('FormController', () => {
           },
         },
       ],
-    }).compile();
+    })
+      .overrideGuard(FormAccessGuard)
+      .useValue({ canActivate: () => true })
+      .compile();
 
     controller = module.get<FormController>(FormController);
     service = module.get<FormService>(FormService);
