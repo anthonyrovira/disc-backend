@@ -46,6 +46,44 @@ export class InvitationsService {
     return this.createOrgInvitation(userId, dto);
   }
 
+  async createPromotionInvitation(
+    userId: string,
+    memberId: string,
+    data: {
+      email: string;
+      firstName: string;
+      lastName?: string;
+      organizationId: string;
+      teamId?: string;
+    },
+  ): Promise<void> {
+    const existing = await this.prisma.invitation.findFirst({
+      where: {
+        email: data.email.toLowerCase(),
+        organizationId: data.organizationId,
+        status: InvitationStatus.PENDING,
+        expiresAt: { gt: new Date() },
+      },
+    });
+
+    if (existing) {
+      throw new ConflictException(
+        `A pending invitation already exists for ${data.email}`,
+      );
+    }
+
+    const dto = new CreateInvitationDto();
+    dto.email = data.email;
+    dto.firstName = data.firstName;
+    dto.lastName = data.lastName;
+    dto.targetStatus = InvitationTargetStatus.MANAGER;
+    dto.organizationId = data.organizationId;
+    dto.teamId = data.teamId;
+    dto.memberId = memberId;
+
+    await this.createInvitationRecord(userId, dto);
+  }
+
   private async createOrgInvitation(
     userId: string,
     dto: CreateInvitationDto,
@@ -119,6 +157,7 @@ export class InvitationsService {
         organizationId: dto.organizationId,
         teamId: dto.teamId ?? null,
         invitedByUserId: userId,
+        memberId: dto.memberId ?? null,
         expiresAt,
       },
       include: {
@@ -449,63 +488,60 @@ export class InvitationsService {
         },
       });
 
-      const member = await tx.organizationMember.create({
-        data: {
-          userId: user.id,
-          email: invitation.email,
-          firstName: invitation.firstName,
-          lastName: invitation.lastName,
-          organizationId: invitation.organizationId,
-          teamId: invitation.teamId,
-          role: OrganizationRole.MANAGER,
-          invitedById: invitation.invitedByUserId,
-        },
-      });
+      let formId: string;
 
-      const form = await tx.form.create({
-        data: {
-          name: 'disc_form',
-          memberId: member.id,
-          status: 'in_progress',
-          created_at: new Date(),
-        },
-      });
+      if (invitation.memberId) {
+        // Promotion flow: update existing member to MANAGER, keep existing form
+        await tx.organizationMember.update({
+          where: { id: invitation.memberId },
+          data: {
+            role: OrganizationRole.MANAGER,
+            userId: user.id,
+          },
+        });
 
-      const allQuestions = await tx.question.findMany({
-        select: { id: true },
-      });
+        const existingForm = await tx.form.findFirst({
+          where: { memberId: invitation.memberId },
+          orderBy: { created_at: 'desc' },
+        });
 
-      const shuffled = this.shuffle(allQuestions.map((q) => q.id)).slice(0, 30);
+        if (existingForm) {
+          await tx.invitation.update({
+            where: { id: invitation.id },
+            data: {
+              status: InvitationStatus.ACCEPTED,
+              acceptedAt: new Date(),
+              formId: existingForm.id,
+            },
+          });
+          formId = existingForm.id;
+        } else {
+          formId = await this.createFormForMember(tx, invitation.memberId, invitation.id);
+        }
+      } else {
+        // Standard flow: create new member + new form
+        const member = await tx.organizationMember.create({
+          data: {
+            userId: user.id,
+            email: invitation.email,
+            firstName: invitation.firstName,
+            lastName: invitation.lastName,
+            organizationId: invitation.organizationId,
+            teamId: invitation.teamId,
+            role: OrganizationRole.MANAGER,
+            invitedById: invitation.invitedByUserId,
+          },
+        });
 
-      await tx.formQuestion.createMany({
-        data: shuffled.map((questionId, index) => ({
-          formId: form.id,
-          questionId,
-          order: index + 1,
-        })),
-      });
-
-      const generatedName = this.generateFormName();
-      await tx.form.update({
-        where: { id: form.id },
-        data: { name: generatedName },
-      });
-
-      await tx.invitation.update({
-        where: { id: invitation.id },
-        data: {
-          status: InvitationStatus.ACCEPTED,
-          acceptedAt: new Date(),
-          formId: form.id,
-        },
-      });
+        formId = await this.createFormForMember(tx, member.id, invitation.id);
+      }
 
       const accessToken = this.jwtService.sign({
         sub: user.id,
         email: user.email,
       });
 
-      return { accessToken, formId: form.id };
+      return { accessToken, formId };
     });
 
     return new SetupPasswordResponseDto({
@@ -556,6 +592,52 @@ export class InvitationsService {
         err instanceof Error ? err.message : String(err),
       );
     }
+  }
+
+  private async createFormForMember(
+    tx: any,
+    memberId: string,
+    invitationId: string,
+  ): Promise<string> {
+    const form = await tx.form.create({
+      data: {
+        name: 'disc_form',
+        memberId,
+        status: 'in_progress',
+        created_at: new Date(),
+      },
+    });
+
+    const allQuestions = await tx.question.findMany({
+      select: { id: true },
+    });
+
+    const shuffled = this.shuffle(allQuestions.map((q) => q.id)).slice(0, 30);
+
+    await tx.formQuestion.createMany({
+      data: shuffled.map((questionId, index) => ({
+        formId: form.id,
+        questionId,
+        order: index + 1,
+      })),
+    });
+
+    const generatedName = this.generateFormName();
+    await tx.form.update({
+      where: { id: form.id },
+      data: { name: generatedName },
+    });
+
+    await tx.invitation.update({
+      where: { id: invitationId },
+      data: {
+        status: InvitationStatus.ACCEPTED,
+        acceptedAt: new Date(),
+        formId: form.id,
+      },
+    });
+
+    return form.id;
   }
 
   private generateFormName(): string {
