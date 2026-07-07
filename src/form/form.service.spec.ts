@@ -16,6 +16,11 @@ describe('FormService', () => {
             question: {
               findMany: jest.fn(),
             },
+            organizationMember: {
+              findFirst: jest.fn(),
+              findUnique: jest.fn(),
+              findMany: jest.fn(),
+            },
             form: {
               create: jest.fn(),
               findUnique: jest.fn(),
@@ -35,11 +40,9 @@ describe('FormService', () => {
               update: jest.fn(),
               deleteMany: jest.fn(),
             },
-            organizationMembership: {
-              findMany: jest.fn(),
-            },
             formOrganization: {
               createMany: jest.fn(),
+              create: jest.fn(),
             },
           },
         },
@@ -55,21 +58,27 @@ describe('FormService', () => {
   });
 
   describe('initForm', () => {
-    it('should create a form with 18 shuffled questions', async () => {
+    it('should create a form with 30 shuffled questions linked to a member', async () => {
       const mockQuestions = Array.from({ length: 43 }, (_, i) => ({ id: `q-${i + 1}` }));
-      const mockForm = { id: 'form-id', name: 'Test', status: 'in_progress', user_id: 'user1', created_at: new Date(), updated_at: null };
+      const mockMember = { id: 'member-id' };
+      const mockForm = { id: 'form-id', name: 'Test', status: 'in_progress', memberId: 'member-id', created_at: new Date(), updated_at: null };
 
+      prisma.organizationMember.findFirst = jest.fn().mockResolvedValue(mockMember);
       prisma.question.findMany = jest.fn().mockResolvedValue(mockQuestions);
       prisma.form.create = jest.fn().mockResolvedValue(mockForm);
 
       const result = await service.initForm('Test', 'user1');
 
       expect(result).toEqual(mockForm);
+      expect(prisma.organizationMember.findFirst).toHaveBeenCalledWith({
+        where: { userId: 'user1' },
+        select: { id: true },
+      });
       expect(prisma.question.findMany).toHaveBeenCalledWith({ select: { id: true } });
       expect(prisma.form.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
           name: 'Test',
-          user_id: 'user1',
+          memberId: 'member-id',
           status: 'in_progress',
         }),
       });
@@ -80,7 +89,7 @@ describe('FormService', () => {
   });
 
   describe('getForms', () => {
-    it('should return forms for a user', async () => {
+    it('should return forms for a user via member relation', async () => {
       const mockForms = [{ id: 'f1' }];
       prisma.form.findMany = jest.fn().mockResolvedValue(mockForms);
 
@@ -88,7 +97,7 @@ describe('FormService', () => {
 
       expect(result).toEqual(mockForms);
       expect(prisma.form.findMany).toHaveBeenCalledWith({
-        where: { user_id: 'user1' },
+        where: { member: { userId: 'user1' } },
         orderBy: { created_at: 'desc' },
       });
     });
@@ -96,7 +105,7 @@ describe('FormService', () => {
 
   describe('deleteForm', () => {
     it('should delete form and all related records', async () => {
-      const mockForm = { id: 'form-id', user_id: 'user1' };
+      const mockForm = { id: 'form-id', member: { userId: 'user1' } };
       prisma.form.findUnique = jest.fn().mockResolvedValue(mockForm);
       prisma.answer.deleteMany = jest.fn().mockResolvedValue({ count: 5 });
       prisma.formQuestion.deleteMany = jest.fn().mockResolvedValue({ count: 30 });
@@ -104,7 +113,10 @@ describe('FormService', () => {
 
       await service.deleteForm('form-id', 'user1');
 
-      expect(prisma.form.findUnique).toHaveBeenCalledWith({ where: { id: 'form-id' } });
+      expect(prisma.form.findUnique).toHaveBeenCalledWith({
+        where: { id: 'form-id' },
+        include: { member: { select: { userId: true } } },
+      });
       expect(prisma.answer.deleteMany).toHaveBeenCalledWith({ where: { form_id: 'form-id' } });
       expect(prisma.formQuestion.deleteMany).toHaveBeenCalledWith({ where: { formId: 'form-id' } });
       expect(prisma.form.delete).toHaveBeenCalledWith({ where: { id: 'form-id' } });
@@ -119,7 +131,7 @@ describe('FormService', () => {
     });
 
     it('should throw NotFoundException if form belongs to another user', async () => {
-      const mockForm = { id: 'form-id', user_id: 'other-user' };
+      const mockForm = { id: 'form-id', member: { userId: 'other-user' } };
       prisma.form.findUnique = jest.fn().mockResolvedValue(mockForm);
 
       await expect(service.deleteForm('form-id', 'user1')).rejects.toThrow(
@@ -158,8 +170,8 @@ describe('FormService', () => {
       prisma.answer.create = jest.fn().mockResolvedValue(mockAnswer);
       prisma.formQuestion.update = jest.fn().mockResolvedValue({ ...mockFq, answered: true });
       prisma.formQuestion.count = jest.fn().mockResolvedValue(18);
-      prisma.form.update = jest.fn().mockResolvedValue({ user_id: 'user1' });
-      prisma.organizationMembership.findMany = jest.fn().mockResolvedValue([]);
+      prisma.form.update = jest.fn().mockResolvedValue({ memberId: 'member-id' });
+      prisma.organizationMember.findUnique = jest.fn().mockResolvedValue(null);
 
       const result = await service.submitFormAnswer(formId, 'q-1', '01_A');
 

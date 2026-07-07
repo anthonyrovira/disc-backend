@@ -47,7 +47,7 @@ export class OrganizationRolesGuard implements CanActivate {
       throw new ForbiddenException('Organization ID not found');
     }
 
-    const membership = await this.prisma.organizationMembership.findUnique({
+    const member = await this.prisma.organizationMember.findUnique({
       where: {
         userId_organizationId: {
           userId: user.id,
@@ -57,11 +57,11 @@ export class OrganizationRolesGuard implements CanActivate {
       select: { role: true },
     });
 
-    if (!membership) {
+    if (!member) {
       throw new ForbiddenException('You are not a member of this organization');
     }
 
-    if (!roles.includes(membership.role)) {
+    if (!roles.includes(member.role)) {
       throw new ForbiddenException(
         `Requires one of the following roles: ${roles.join(', ')}`,
       );

@@ -9,7 +9,6 @@ import {
 import {
   OrganizationRole,
   OwnershipTransferStatus,
-  ParticipantStatus,
 } from '../../generated/prisma/client';
 import { PendingTransferDto } from './dto/organizations.dto';
 import { PrismaService } from '@/common/prisma/prisma.service';
@@ -36,12 +35,23 @@ export class OrganizationsService {
     userId: string,
     dto: CreateOrganizationDto,
   ): Promise<OrganizationResponseDto> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { email: true, firstName: true },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
     const org = await this.prisma.organization.create({
       data: {
         name: dto.name,
         members: {
           create: {
             userId,
+            email: user.email,
+            firstName: user.firstName,
             role: OrganizationRole.OWNER,
           },
         },
@@ -54,13 +64,13 @@ export class OrganizationsService {
   async getUserOrganizations(
     userId: string,
   ): Promise<OrganizationWithRoleDto[]> {
-    const memberships = await this.prisma.organizationMembership.findMany({
+    const members = await this.prisma.organizationMember.findMany({
       where: { userId },
       include: { organization: true },
       orderBy: { joinedAt: 'asc' },
     });
 
-    const orgIds = memberships.map((m) => m.organization.id);
+    const orgIds = members.map((m) => m.organization.id);
 
     const pendingTransfers = orgIds.length > 0
       ? await this.prisma.ownershipTransfer.findMany({
@@ -85,7 +95,7 @@ export class OrganizationsService {
       ]),
     );
 
-    return memberships.map(
+    return members.map(
       (m) =>
         new OrganizationWithRoleDto({
           id: m.organization.id,
@@ -137,76 +147,43 @@ export class OrganizationsService {
       where: { organizationId },
       include: {
         form: {
-          select: { user_id: true, participantId: true, updated_at: true, status: true },
+          select: { memberId: true, updated_at: true, status: true },
         },
       },
       orderBy: { form: { updated_at: 'desc' } },
     });
 
-    const userLastTestMap = new Map<string, Date>();
-    const participantLastTestMap = new Map<string, Date>();
+    const memberLastTestMap = new Map<string, Date>();
     for (const link of formLinks) {
-      if (link.form.status !== 'completed') continue;
-      if (link.form.user_id && !userLastTestMap.has(link.form.user_id)) {
-        userLastTestMap.set(link.form.user_id, link.form.updated_at!);
-      }
-      if (link.form.participantId && !participantLastTestMap.has(link.form.participantId)) {
-        participantLastTestMap.set(link.form.participantId, link.form.updated_at!);
+      if (link.form.status !== 'completed' || !link.form.memberId) continue;
+      if (!memberLastTestMap.has(link.form.memberId)) {
+        memberLastTestMap.set(link.form.memberId, link.form.updated_at!);
       }
     }
 
-    const members: MemberDto[] = [];
-
-    const memberships = await this.prisma.organizationMembership.findMany({
+    const allMembers = await this.prisma.organizationMember.findMany({
       where: { organizationId },
       include: {
-        user: {
-          select: { id: true, email: true, firstName: true, lastName: true },
-        },
+        user: { select: { id: true, email: true, firstName: true, lastName: true } },
         team: { select: { id: true, name: true } },
       },
       orderBy: { joinedAt: 'asc' },
     });
 
-    for (const m of memberships) {
-      members.push(
+    return allMembers.map(
+      (m) =>
         new MemberDto({
-          id: m.userId,
-          email: m.user.email,
-          firstName: m.user.firstName ?? undefined,
-          lastName: m.user.lastName ?? undefined,
+          id: m.userId ?? m.id,
+          email: m.email,
+          firstName: m.firstName ?? undefined,
+          lastName: m.lastName ?? undefined,
           role: m.role,
           teamId: m.team?.id,
           teamName: m.team?.name,
           joinedAt: m.joinedAt,
-          lastTestDate: userLastTestMap.get(m.userId),
+          lastTestDate: memberLastTestMap.get(m.id),
         }),
-      );
-    }
-
-    const participants = await this.prisma.participant.findMany({
-      where: { organizationId, status: ParticipantStatus.EMPLOYEE },
-      include: { team: { select: { id: true, name: true } } },
-      orderBy: { createdAt: 'asc' },
-    });
-
-    for (const p of participants) {
-      members.push(
-        new MemberDto({
-          id: p.id,
-          email: p.email,
-          firstName: p.firstName ?? undefined,
-          lastName: p.lastName ?? undefined,
-          role: ParticipantStatus.EMPLOYEE,
-          teamId: p.team?.id,
-          teamName: p.team?.name,
-          joinedAt: p.createdAt,
-          lastTestDate: participantLastTestMap.get(p.id),
-        }),
-      );
-    }
-
-    return members;
+    );
   }
 
   async getMembership(
@@ -217,7 +194,7 @@ export class OrganizationsService {
     organizationId: string;
     role: OrganizationRole;
   } | null> {
-    return this.prisma.organizationMembership.findUnique({
+    const member = await this.prisma.organizationMember.findUnique({
       where: {
         userId_organizationId: { userId, organizationId },
       },
@@ -227,13 +204,16 @@ export class OrganizationsService {
         role: true,
       },
     });
+
+    if (!member || !member.userId) return null;
+    return member as { userId: string; organizationId: string; role: OrganizationRole };
   }
 
   async removeMember(
     organizationId: string,
     targetUserId: string,
   ): Promise<void> {
-    const membership = await this.prisma.organizationMembership.findUnique({
+    const member = await this.prisma.organizationMember.findUnique({
       where: {
         userId_organizationId: {
           userId: targetUserId,
@@ -242,21 +222,16 @@ export class OrganizationsService {
       },
     });
 
-    if (!membership) {
+    if (!member) {
       throw new NotFoundException('Member not found in this organization');
     }
 
-    if (membership.role === OrganizationRole.OWNER) {
+    if (member.role === OrganizationRole.OWNER) {
       throw new ForbiddenException('Cannot remove the organization owner');
     }
 
-    await this.prisma.organizationMembership.delete({
-      where: {
-        userId_organizationId: {
-          userId: targetUserId,
-          organizationId,
-        },
-      },
+    await this.prisma.organizationMember.delete({
+      where: { id: member.id },
     });
   }
 
@@ -269,11 +244,17 @@ export class OrganizationsService {
       include: {
         form: {
           include: {
-            User: {
-              select: { id: true, email: true, firstName: true, lastName: true },
-            },
-            Participant: {
-              select: { id: true, email: true, firstName: true, lastName: true, status: true, teamId: true, team: { select: { name: true } } },
+            member: {
+              select: {
+                id: true,
+                email: true,
+                firstName: true,
+                lastName: true,
+                role: true,
+                userId: true,
+                teamId: true,
+                team: { select: { name: true } },
+              },
             },
             answers: {
               select: {
@@ -287,54 +268,37 @@ export class OrganizationsService {
       orderBy: { form: { updated_at: 'desc' } },
     });
 
-    const userLatestForm = new Map<string, typeof formLinks[0]['form']>();
-    const participantLatestForm = new Map<string, typeof formLinks[0]['form']>();
+    const memberLatestForm = new Map<string, typeof formLinks[0]['form']>();
 
     for (const link of formLinks) {
       if (link.form.status !== 'completed') continue;
-
-      if (link.form.User?.id) {
-        const uid = link.form.User.id;
-        if (!userLatestForm.has(uid)) {
-          userLatestForm.set(uid, link.form);
-        }
-      }
-
-      if (link.form.Participant?.id) {
-        const pid = link.form.Participant.id;
-        if (!participantLatestForm.has(pid)) {
-          participantLatestForm.set(pid, link.form);
-        }
+      if (link.form.member?.id && !memberLatestForm.has(link.form.member.id)) {
+        memberLatestForm.set(link.form.member.id, link.form);
       }
     }
+
+    const allMembers = await this.prisma.organizationMember.findMany({
+      where: {
+        organizationId,
+        ...(teamId ? { teamId } : {}),
+      },
+    });
 
     const members: MemberResultDto[] = [];
     const totalScores = { D: 0, I: 0, S: 0, C: 0 };
     let membersWithResults = 0;
 
-    const allMemberships = await this.prisma.organizationMembership.findMany({
-      where: { organizationId, ...(teamId ? { teamId } : {}) },
-      include: {
-        user: {
-          select: { id: true, email: true, firstName: true, lastName: true },
-        },
-      },
-    });
-
-    for (const membership of allMemberships) {
-      const form = userLatestForm.get(membership.user.id);
+    for (const member of allMembers) {
+      const form = memberLatestForm.get(member.id);
 
       if (!form) {
         members.push(
           new MemberResultDto({
-            id: membership.user.id,
-            email: membership.user.email,
-            firstName: membership.user.firstName ?? undefined,
-            lastName: membership.user.lastName ?? undefined,
-            D: 0,
-            I: 0,
-            S: 0,
-            C: 0,
+            id: member.userId ?? member.id,
+            email: member.email,
+            firstName: member.firstName ?? undefined,
+            lastName: member.lastName ?? undefined,
+            D: 0, I: 0, S: 0, C: 0,
           }),
         );
         continue;
@@ -353,59 +317,10 @@ export class OrganizationsService {
 
       members.push(
         new MemberResultDto({
-          id: membership.user.id,
-          email: membership.user.email,
-          firstName: membership.user.firstName ?? undefined,
-          lastName: membership.user.lastName ?? undefined,
-          ...scores,
-        }),
-      );
-    }
-
-    const allParticipants = await this.prisma.participant.findMany({
-      where: {
-        organizationId,
-        status: ParticipantStatus.EMPLOYEE,
-        ...(teamId ? { teamId } : {}),
-      },
-    });
-
-    for (const participant of allParticipants) {
-      const form = participantLatestForm.get(participant.id);
-
-      if (!form) {
-        members.push(
-          new MemberResultDto({
-            id: participant.id,
-            email: participant.email,
-            firstName: participant.firstName ?? undefined,
-            lastName: participant.lastName ?? undefined,
-            D: 0,
-            I: 0,
-            S: 0,
-            C: 0,
-          }),
-        );
-        continue;
-      }
-
-      const scores = { D: 0, I: 0, S: 0, C: 0 };
-      for (const answer of form.answers) {
-        scores[answer.Option.dimension]++;
-      }
-
-      totalScores.D += scores.D;
-      totalScores.I += scores.I;
-      totalScores.S += scores.S;
-      totalScores.C += scores.C;
-      membersWithResults++;
-
-      members.push(
-        new MemberResultDto({
-          id: participant.id,
-          email: participant.email,
-          firstName: participant.firstName ?? undefined,
-          lastName: participant.lastName ?? undefined,
+          id: member.userId ?? member.id,
+          email: member.email,
+          firstName: member.firstName ?? undefined,
+          lastName: member.lastName ?? undefined,
           ...scores,
         }),
       );
@@ -439,31 +354,29 @@ export class OrganizationsService {
       );
     }
 
-    const targetMembership =
-      await this.prisma.organizationMembership.findUnique({
-        where: {
-          userId_organizationId: {
-            userId: targetUserId,
-            organizationId,
-          },
+    const targetMember = await this.prisma.organizationMember.findUnique({
+      where: {
+        userId_organizationId: {
+          userId: targetUserId,
+          organizationId,
         },
-      });
+      },
+    });
 
-    if (!targetMembership) {
+    if (!targetMember) {
       throw new NotFoundException(
         'Target user is not a member of this organization',
       );
     }
 
-    const existingTransfer =
-      await this.prisma.ownershipTransfer.findUnique({
-        where: {
-          organizationId_status: {
-            organizationId,
-            status: OwnershipTransferStatus.PENDING,
-          },
+    const existingTransfer = await this.prisma.ownershipTransfer.findUnique({
+      where: {
+        organizationId_status: {
+          organizationId,
+          status: OwnershipTransferStatus.PENDING,
         },
-      });
+      },
+    });
 
     if (existingTransfer) {
       throw new ConflictException(
@@ -538,7 +451,7 @@ export class OrganizationsService {
     }
 
     await this.prisma.$transaction([
-      this.prisma.organizationMembership.update({
+      this.prisma.organizationMember.update({
         where: {
           userId_organizationId: {
             userId: transfer.fromUserId,
@@ -547,7 +460,7 @@ export class OrganizationsService {
         },
         data: { role: OrganizationRole.MANAGER },
       }),
-      this.prisma.organizationMembership.update({
+      this.prisma.organizationMember.update({
         where: {
           userId_organizationId: {
             userId: transfer.toUserId,
@@ -570,25 +483,23 @@ export class OrganizationsService {
     organizationId: string,
     userId: string,
   ): Promise<void> {
-    const membership = await this.prisma.organizationMembership.findUnique({
+    const member = await this.prisma.organizationMember.findUnique({
       where: { userId_organizationId: { userId, organizationId } },
     });
 
-    if (!membership) {
+    if (!member) {
       throw new NotFoundException('You are not a member of this organization');
     }
 
-    if (membership.role === OrganizationRole.OWNER) {
+    if (member.role === OrganizationRole.OWNER) {
       throw new ForbiddenException(
         'Cannot leave as the owner. Transfer ownership first or delete the organization.',
       );
     }
 
-    await this.prisma.organizationMembership.delete({
-      where: { userId_organizationId: { userId, organizationId } },
+    await this.prisma.organizationMember.delete({
+      where: { id: member.id },
     });
-
-    // TODO: notify managers (OWNER + MANAGER) that a member has left the org
   }
 
   async deleteOrganization(organizationId: string): Promise<void> {
@@ -661,11 +572,7 @@ export class OrganizationsService {
     }
 
     await this.prisma.$transaction([
-      this.prisma.organizationMembership.updateMany({
-        where: { teamId },
-        data: { teamId: null },
-      }),
-      this.prisma.participant.updateMany({
+      this.prisma.organizationMember.updateMany({
         where: { teamId },
         data: { teamId: null },
       }),
@@ -679,46 +586,44 @@ export class OrganizationsService {
     organizationId: string,
     status?: string,
   ): Promise<ParticipantResponseDto[]> {
-    const where: any = { organizationId };
-    if (status) {
-      where.status = status;
-    }
-
-    const participants = await this.prisma.participant.findMany({
-      where,
+    const members = await this.prisma.organizationMember.findMany({
+      where: {
+        organizationId,
+        ...(status ? { role: status as OrganizationRole } : {}),
+      },
       include: { team: { select: { id: true, name: true } } },
-      orderBy: { createdAt: 'asc' },
+      orderBy: { joinedAt: 'asc' },
     });
 
-    const participantIds = participants.map((p) => p.id);
+    const memberIds = members.map((m) => m.id);
     const completedForms = await this.prisma.form.findMany({
       where: {
-        participantId: { in: participantIds },
+        memberId: { in: memberIds },
         status: 'completed',
       },
-      select: { participantId: true, updated_at: true },
+      select: { memberId: true, updated_at: true },
       orderBy: { updated_at: 'desc' },
     });
 
     const lastTestMap = new Map<string, Date>();
     for (const f of completedForms) {
-      if (f.participantId && !lastTestMap.has(f.participantId)) {
-        lastTestMap.set(f.participantId, f.updated_at!);
+      if (f.memberId && !lastTestMap.has(f.memberId)) {
+        lastTestMap.set(f.memberId, f.updated_at!);
       }
     }
 
-    return participants.map(
-      (p) =>
+    return members.map(
+      (m) =>
         new ParticipantResponseDto({
-          id: p.id,
-          email: p.email,
-          firstName: p.firstName,
-          lastName: p.lastName ?? undefined,
-          status: p.status,
-          teamId: p.team?.id,
-          teamName: p.team?.name,
-          createdAt: p.createdAt,
-          lastTestDate: lastTestMap.get(p.id),
+          id: m.id,
+          email: m.email,
+          firstName: m.firstName,
+          lastName: m.lastName ?? undefined,
+          status: m.role,
+          teamId: m.team?.id,
+          teamName: m.team?.name,
+          createdAt: m.joinedAt,
+          lastTestDate: lastTestMap.get(m.id),
         }),
     );
   }
@@ -728,12 +633,12 @@ export class OrganizationsService {
     participantId: string,
     dto: UpdateParticipantTeamDto,
   ): Promise<ParticipantResponseDto> {
-    const participant = await this.prisma.participant.findFirst({
+    const member = await this.prisma.organizationMember.findFirst({
       where: { id: participantId, organizationId },
       include: { team: { select: { id: true, name: true } } },
     });
 
-    if (!participant) {
+    if (!member) {
       throw new NotFoundException('Participant not found');
     }
 
@@ -750,14 +655,14 @@ export class OrganizationsService {
       updateData.teamId = dto.teamId || null;
     }
 
-    const updated = await this.prisma.participant.update({
-      where: { id: participantId },
+    const updated = await this.prisma.organizationMember.update({
+      where: { id: member.id },
       data: updateData,
       include: { team: { select: { id: true, name: true } } },
     });
 
     const completedForm = await this.prisma.form.findFirst({
-      where: { participantId, status: 'completed' },
+      where: { memberId: member.id, status: 'completed' },
       orderBy: { updated_at: 'desc' },
       select: { updated_at: true },
     });
@@ -767,30 +672,30 @@ export class OrganizationsService {
       email: updated.email,
       firstName: updated.firstName,
       lastName: updated.lastName ?? undefined,
-      status: updated.status,
+      status: updated.role,
       teamId: updated.team?.id,
       teamName: updated.team?.name,
-      createdAt: updated.createdAt,
+      createdAt: updated.joinedAt,
       lastTestDate: completedForm?.updated_at ?? undefined,
     });
   }
 
   async deleteParticipant(participantId: string): Promise<void> {
-    const participant = await this.prisma.participant.findUnique({
+    const member = await this.prisma.organizationMember.findUnique({
       where: { id: participantId },
     });
 
-    if (!participant) {
+    if (!member) {
       throw new NotFoundException('Participant not found');
     }
 
-    await this.prisma.participant.delete({
+    await this.prisma.organizationMember.delete({
       where: { id: participantId },
     });
   }
 
   async getCandidates(organizationId: string): Promise<ParticipantResponseDto[]> {
-    return this.getParticipants(organizationId, ParticipantStatus.CANDIDATE);
+    return this.getParticipants(organizationId, 'CANDIDATE');
   }
 
   // ---- Simulation ----
@@ -808,8 +713,12 @@ export class OrganizationsService {
       throw new NotFoundException('Team not found in this organization');
     }
 
-    const candidate = await this.prisma.participant.findFirst({
-      where: { id: dto.participantId, organizationId, status: ParticipantStatus.CANDIDATE },
+    const candidate = await this.prisma.organizationMember.findFirst({
+      where: {
+        id: dto.participantId,
+        organizationId,
+        role: OrganizationRole.CANDIDATE,
+      },
     });
 
     if (!candidate) {
@@ -817,7 +726,7 @@ export class OrganizationsService {
     }
 
     const candidateForm = await this.prisma.form.findFirst({
-      where: { participantId: candidate.id, status: 'completed' },
+      where: { memberId: candidate.id, status: 'completed' },
       include: {
         answers: {
           select: {
@@ -829,18 +738,22 @@ export class OrganizationsService {
       orderBy: { updated_at: 'desc' },
     });
 
-    const teamMembers = await this.prisma.participant.findMany({
-      where: { teamId, organizationId, status: ParticipantStatus.EMPLOYEE },
+    const teamMembers = await this.prisma.organizationMember.findMany({
+      where: {
+        teamId,
+        organizationId,
+        role: OrganizationRole.EMPLOYEE,
+      },
     });
 
-    const teamParticipantIds = teamMembers.map((m) => m.id);
+    const teamMemberIds = teamMembers.map((m) => m.id);
     const teamForms = await this.prisma.form.findMany({
       where: {
-        participantId: { in: teamParticipantIds },
+        memberId: { in: teamMemberIds },
         status: 'completed',
       },
       include: {
-        Participant: {
+        member: {
           select: { id: true, email: true, firstName: true, lastName: true },
         },
         answers: {
@@ -855,8 +768,8 @@ export class OrganizationsService {
 
     const latestTeamFormMap = new Map<string, typeof teamForms[0]>();
     for (const f of teamForms) {
-      if (f.Participant?.id && !latestTeamFormMap.has(f.Participant.id)) {
-        latestTeamFormMap.set(f.Participant.id, f);
+      if (f.member?.id && !latestTeamFormMap.has(f.member.id)) {
+        latestTeamFormMap.set(f.member.id, f);
       }
     }
 

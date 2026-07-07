@@ -10,7 +10,6 @@ import { OrganizationsService } from './organizations.service';
 import {
   OrganizationRole,
   OwnershipTransferStatus,
-  ParticipantStatus,
 } from '../../generated/prisma/client';
 
 describe('OrganizationsService', () => {
@@ -23,9 +22,10 @@ describe('OrganizationsService', () => {
       findUnique: jest.fn(),
       delete: jest.fn(),
     },
-    organizationMembership: {
+    organizationMember: {
       findUnique: jest.fn(),
       findMany: jest.fn(),
+      findFirst: jest.fn(),
       update: jest.fn(),
       updateMany: jest.fn(),
       delete: jest.fn(),
@@ -39,14 +39,6 @@ describe('OrganizationsService', () => {
     formOrganization: {
       findMany: jest.fn(),
     },
-    participant: {
-      findMany: jest.fn(),
-      findFirst: jest.fn(),
-      findUnique: jest.fn(),
-      update: jest.fn(),
-      updateMany: jest.fn(),
-      delete: jest.fn(),
-    },
     team: {
       findMany: jest.fn(),
       findUnique: jest.fn(),
@@ -58,6 +50,9 @@ describe('OrganizationsService', () => {
     form: {
       findMany: jest.fn(),
       findFirst: jest.fn(),
+    },
+    user: {
+      findUnique: jest.fn(),
     },
     $transaction: jest.fn(),
   });
@@ -78,6 +73,7 @@ describe('OrganizationsService', () => {
   describe('create', () => {
     it('should create an organization with the user as OWNER', async () => {
       const mockOrg = { id: 'org-id', name: 'Acme', createdAt: new Date() };
+      prisma.user.findUnique.mockResolvedValue({ id: 'user-id', email: 'owner@test.com', firstName: 'Owner' });
       prisma.organization.create.mockResolvedValue(mockOrg);
 
       const result = await service.create('user-id', { name: 'Acme' });
@@ -88,7 +84,7 @@ describe('OrganizationsService', () => {
         data: {
           name: 'Acme',
           members: {
-            create: { userId: 'user-id', role: OrganizationRole.OWNER },
+            create: { userId: 'user-id', email: 'owner@test.com', firstName: 'Owner', role: OrganizationRole.OWNER },
           },
         },
       });
@@ -111,40 +107,45 @@ describe('OrganizationsService', () => {
   });
 
   describe('getMembers', () => {
-    it('should return members and EMPLOYEE participants', async () => {
+    it('should return all members (OWNER, MANAGER, EMPLOYEE)', async () => {
       const testDate = new Date('2025-06-01');
 
       prisma.formOrganization.findMany.mockResolvedValue([
-        { form: { user_id: 'u1', participantId: null, updated_at: testDate, status: 'completed' } },
+        { form: { memberId: 'm1', updated_at: testDate, status: 'completed' } },
       ]);
 
-      prisma.organizationMembership.findMany.mockResolvedValue([
+      prisma.organizationMember.findMany.mockResolvedValue([
         {
+          id: 'm1',
           userId: 'u1',
-          organizationId: 'org-id',
+          email: 'owner@test.com',
+          firstName: 'Owner',
+          lastName: null,
           role: OrganizationRole.OWNER,
           joinedAt: new Date(),
-          user: { id: 'u1', email: 'owner@test.com' },
+          user: { id: 'u1', email: 'owner@test.com', firstName: 'Owner', lastName: null },
           team: null,
         },
         {
+          id: 'm2',
           userId: 'u2',
-          organizationId: 'org-id',
+          email: 'manager@test.com',
+          firstName: 'Jane',
+          lastName: null,
           role: OrganizationRole.MANAGER,
           joinedAt: new Date(),
-          user: { id: 'u2', email: 'manager@test.com', firstName: 'Jane' },
+          user: { id: 'u2', email: 'manager@test.com', firstName: 'Jane', lastName: null },
           team: { id: 't1', name: 'Engineering' },
         },
-      ]);
-
-      prisma.participant.findMany.mockResolvedValue([
         {
-          id: 'p1',
+          id: 'm3',
+          userId: null,
           email: 'emp@test.com',
           firstName: 'Bob',
           lastName: null,
-          status: ParticipantStatus.EMPLOYEE,
-          createdAt: new Date(),
+          role: OrganizationRole.EMPLOYEE,
+          joinedAt: new Date(),
+          user: null,
           team: null,
         },
       ]);
@@ -155,13 +156,13 @@ describe('OrganizationsService', () => {
       expect(result[0].role).toBe(OrganizationRole.OWNER);
       expect(result[1].role).toBe(OrganizationRole.MANAGER);
       expect(result[1].teamName).toBe('Engineering');
-      expect(result[2].role).toBe(ParticipantStatus.EMPLOYEE);
+      expect(result[2].role).toBe(OrganizationRole.EMPLOYEE);
     });
   });
 
   describe('getMembership', () => {
     it('should return membership if exists', async () => {
-      prisma.organizationMembership.findUnique.mockResolvedValue({
+      prisma.organizationMember.findUnique.mockResolvedValue({
         userId: 'u1',
         organizationId: 'org-id',
         role: OrganizationRole.MANAGER,
@@ -174,18 +175,20 @@ describe('OrganizationsService', () => {
 
   describe('removeMember', () => {
     it('should remove a non-OWNER member', async () => {
-      prisma.organizationMembership.findUnique.mockResolvedValue({
+      prisma.organizationMember.findUnique.mockResolvedValue({
+        id: 'm2',
         userId: 'u2',
         organizationId: 'org-id',
         role: OrganizationRole.MANAGER,
       });
 
       await service.removeMember('org-id', 'u2');
-      expect(prisma.organizationMembership.delete).toHaveBeenCalled();
+      expect(prisma.organizationMember.delete).toHaveBeenCalledWith({ where: { id: 'm2' } });
     });
 
     it('should throw ForbiddenException if target is OWNER', async () => {
-      prisma.organizationMembership.findUnique.mockResolvedValue({
+      prisma.organizationMember.findUnique.mockResolvedValue({
+        id: 'm1',
         userId: 'u1',
         organizationId: 'org-id',
         role: OrganizationRole.OWNER,
@@ -204,8 +207,7 @@ describe('OrganizationsService', () => {
           form: {
             status: 'completed',
             updated_at: new Date(),
-            User: { id: 'u1', email: 'm1@test.com', firstName: 'A', lastName: null },
-            Participant: null,
+            member: { id: 'm1', userId: 'u1', email: 'm1@test.com', firstName: 'A', lastName: null, role: OrganizationRole.OWNER, teamId: null, team: null },
             answers: [
               { optionValue: 'q0_D', Option: { dimension: 'D' } },
               { optionValue: 'q1_I', Option: { dimension: 'I' } },
@@ -215,14 +217,20 @@ describe('OrganizationsService', () => {
         },
       ]);
 
-      prisma.organizationMembership.findMany.mockResolvedValue([
+      prisma.organizationMember.findMany.mockResolvedValue([
         {
+          id: 'm1',
           userId: 'u1',
-          user: { id: 'u1', email: 'm1@test.com', firstName: 'A', lastName: null },
+          email: 'm1@test.com',
+          firstName: 'A',
+          lastName: null,
+          role: OrganizationRole.OWNER,
+          teamId: null,
+          invitedById: null,
+          organizationId: 'org-id',
+          joinedAt: new Date(),
         },
       ]);
-
-      prisma.participant.findMany.mockResolvedValue([]);
 
       const result = await service.getDashboardResults('org-id');
 
@@ -234,7 +242,8 @@ describe('OrganizationsService', () => {
 
   describe('initiateTransfer', () => {
     it('should create a pending transfer', async () => {
-      prisma.organizationMembership.findUnique.mockResolvedValue({
+      prisma.organizationMember.findUnique.mockResolvedValue({
+        id: 'm2',
         userId: 'target-id',
         organizationId: 'org-id',
         role: OrganizationRole.MANAGER,
@@ -286,14 +295,14 @@ describe('OrganizationsService', () => {
 
   describe('Participants', () => {
     it('should list participants', async () => {
-      prisma.participant.findMany.mockResolvedValue([
+      prisma.organizationMember.findMany.mockResolvedValue([
         {
-          id: 'p1',
+          id: 'm3',
           email: 'c@t.com',
           firstName: 'C',
           lastName: null,
-          status: ParticipantStatus.CANDIDATE,
-          createdAt: new Date(),
+          role: OrganizationRole.CANDIDATE,
+          joinedAt: new Date(),
           team: null,
         },
       ]);
@@ -304,7 +313,7 @@ describe('OrganizationsService', () => {
     });
 
     it('should get candidates', async () => {
-      prisma.participant.findMany.mockResolvedValue([]);
+      prisma.organizationMember.findMany.mockResolvedValue([]);
       prisma.form.findMany.mockResolvedValue([]);
 
       const result = await service.getCandidates('org-id');

@@ -62,7 +62,7 @@ export class UserService {
     });
     if (!user) throw new Error('User not found');
 
-    const ownedOrgs = await this.prisma.organizationMembership.findMany({
+    const ownedOrgs = await this.prisma.organizationMember.findMany({
       where: { userId: user.id, role: OrganizationRole.OWNER },
       select: { organization: { select: { name: true } } },
     });
@@ -76,7 +76,7 @@ export class UserService {
 
     const formIds = (
       await this.prisma.form.findMany({
-        where: { user_id: user.id },
+        where: { member: { userId: user.id } },
         select: { id: true },
       })
     ).map((f) => f.id);

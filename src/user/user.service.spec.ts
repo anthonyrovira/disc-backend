@@ -29,7 +29,7 @@ describe('UserService', () => {
             answer: {
               deleteMany: jest.fn(),
             },
-            organizationMembership: {
+            organizationMember: {
               findMany: jest.fn().mockResolvedValue([]),
             },
           },
@@ -60,7 +60,7 @@ describe('UserService', () => {
       await service.deleteUser({ id: 'uid' });
 
       expect(prisma.form.findMany).toHaveBeenCalledWith({
-        where: { user_id: 'uid' },
+        where: { member: { userId: 'uid' } },
         select: { id: true },
       });
       expect(prisma.answer.deleteMany).toHaveBeenCalledWith({

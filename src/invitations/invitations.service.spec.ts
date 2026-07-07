@@ -39,8 +39,7 @@ describe('InvitationsService', () => {
       update: jest.fn(),
     },
     organization: { findUnique: jest.fn() },
-    organizationMembership: { findUnique: jest.fn() },
-    participant: { create: jest.fn() },
+    organizationMember: { findUnique: jest.fn(), create: jest.fn() },
     team: { findFirst: jest.fn() },
     form: { create: jest.fn(), update: jest.fn() },
     formQuestion: { createMany: jest.fn() },
@@ -79,7 +78,7 @@ describe('InvitationsService', () => {
     });
 
     it('should throw ForbiddenException if user is not OWNER/MANAGER', async () => {
-      prisma.organizationMembership.findUnique.mockResolvedValue(null);
+      prisma.organizationMember.findUnique.mockResolvedValue(null);
 
       await expect(
         service.create('user-id', 'owner@acme.com', baseDto),
@@ -87,7 +86,7 @@ describe('InvitationsService', () => {
     });
 
     it('should throw ConflictException if pending invitation exists', async () => {
-      prisma.organizationMembership.findUnique.mockResolvedValue({
+      prisma.organizationMember.findUnique.mockResolvedValue({
         userId: 'user-id',
         organizationId: 'org-id',
         role: OrganizationRole.OWNER,
@@ -103,7 +102,7 @@ describe('InvitationsService', () => {
     });
 
     it('should create an invitation successfully', async () => {
-      prisma.organizationMembership.findUnique.mockResolvedValue({
+      prisma.organizationMember.findUnique.mockResolvedValue({
         userId: 'user-id',
         organizationId: 'org-id',
         role: OrganizationRole.OWNER,
@@ -228,12 +227,12 @@ describe('InvitationsService', () => {
       expect(result.formId).toBeUndefined();
     });
 
-    it('should create Participant + Form for EMPLOYEE invitation', async () => {
+    it('should create OrganizationMember + Form for EMPLOYEE invitation', async () => {
       prisma.invitation.findUnique.mockResolvedValue(baseInvitation);
 
       const mockTx = {
         invitation: { update: jest.fn().mockResolvedValue({}) },
-        participant: { create: jest.fn().mockResolvedValue({ id: 'p-id' }) },
+        organizationMember: { create: jest.fn().mockResolvedValue({ id: 'm-id' }) },
         form: {
           create: jest.fn().mockResolvedValue({ id: 'f-id' }),
           update: jest.fn().mockResolvedValue({}),
@@ -246,13 +245,13 @@ describe('InvitationsService', () => {
 
       const result = await service.accept(validToken);
 
-      expect(mockTx.participant.create).toHaveBeenCalled();
+      expect(mockTx.organizationMember.create).toHaveBeenCalled();
       expect(mockTx.form.create).toHaveBeenCalled();
       expect(result.formId).toBe('f-id');
       expect(result.redirectUrl).toContain('http://localhost:5173/form/');
     });
 
-    it('should create CANDIDATE participant for CANDIDATE invitation', async () => {
+    it('should create CANDIDATE member for CANDIDATE invitation', async () => {
       prisma.invitation.findUnique.mockResolvedValue({
         ...baseInvitation,
         targetStatus: InvitationTargetStatus.CANDIDATE,
@@ -260,7 +259,7 @@ describe('InvitationsService', () => {
 
       const mockTx = {
         invitation: { update: jest.fn().mockResolvedValue({}) },
-        participant: { create: jest.fn().mockResolvedValue({ id: 'p-id' }) },
+        organizationMember: { create: jest.fn().mockResolvedValue({ id: 'm-id' }) },
         form: {
           create: jest.fn().mockResolvedValue({ id: 'f-id' }),
           update: jest.fn().mockResolvedValue({}),
@@ -273,10 +272,10 @@ describe('InvitationsService', () => {
 
       await service.accept(validToken);
 
-      expect(mockTx.participant.create).toHaveBeenCalledWith(
+      expect(mockTx.organizationMember.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
-            status: 'CANDIDATE',
+            role: OrganizationRole.CANDIDATE,
           }),
         }),
       );
@@ -325,13 +324,13 @@ describe('InvitationsService', () => {
       ).rejects.toThrow(ConflictException);
     });
 
-    it('should create User + OrgMembership + Form and return JWT', async () => {
+    it('should create User + OrganizationMember + Form and return JWT', async () => {
       prisma.invitation.findUnique.mockResolvedValue(baseInvitation);
       prisma.user.findUnique.mockResolvedValue(null);
 
       const mockTx = {
         user: { create: jest.fn().mockResolvedValue({ id: 'u-id', email: 'manager@acme.com' }) },
-        organizationMembership: { create: jest.fn().mockResolvedValue({}) },
+        organizationMember: { create: jest.fn().mockResolvedValue({ id: 'm-id' }) },
         form: {
           create: jest.fn().mockResolvedValue({ id: 'f-id' }),
           update: jest.fn().mockResolvedValue({}),
@@ -346,7 +345,7 @@ describe('InvitationsService', () => {
       const result = await service.setupPassword(validToken, 'password123');
 
       expect(mockTx.user.create).toHaveBeenCalled();
-      expect(mockTx.organizationMembership.create).toHaveBeenCalledWith(
+      expect(mockTx.organizationMember.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
             role: OrganizationRole.MANAGER,

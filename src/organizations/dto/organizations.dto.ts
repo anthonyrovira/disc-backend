@@ -11,7 +11,6 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { OrganizationRole } from '../../../generated/prisma/client';
-import type { ParticipantStatus } from '../../../generated/prisma/client';
 
 export class CreateOrganizationDto {
   @ApiProperty({
@@ -176,11 +175,12 @@ export class MemberDto {
   lastName?: string;
 
   @ApiProperty({
-    description: 'The role or status of the member',
+    description: 'The role of the member',
+    enum: OrganizationRole,
     example: 'EMPLOYEE',
   })
   @Allow()
-  role: string;
+  role: OrganizationRole;
 
   @ApiPropertyOptional({
     description: 'Team ID if assigned to a team',
@@ -219,7 +219,7 @@ export class MemberDto {
     email: string;
     firstName?: string;
     lastName?: string;
-    role: string;
+    role: OrganizationRole;
     teamId?: string;
     teamName?: string;
     joinedAt: Date;

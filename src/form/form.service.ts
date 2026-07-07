@@ -22,7 +22,7 @@ export class FormService {
 
   async getForms(userId: string): Promise<Form[]> {
     return this.prisma.form.findMany({
-      where: { user_id: userId },
+      where: { member: { userId } },
       orderBy: { created_at: 'desc' },
     });
   }
@@ -40,6 +40,17 @@ export class FormService {
   }
 
   private async createForm(name: string, userId: string): Promise<Form> {
+    const member = await this.prisma.organizationMember.findFirst({
+      where: { userId },
+      select: { id: true },
+    });
+
+    if (!member) {
+      throw new NotFoundException(
+        'You must be a member of an organization to create a form',
+      );
+    }
+
     const allQuestions = await this.prisma.question.findMany({
       select: { id: true },
     });
@@ -54,7 +65,7 @@ export class FormService {
     return this.prisma.form.create({
       data: {
         name: formName,
-        user_id: userId,
+        memberId: member.id,
         status: 'in_progress',
         created_at: new Date(),
         questions: {
@@ -305,11 +316,11 @@ export class FormService {
   }
 
   async updateFormName(formId: string, userId: string, name: string): Promise<Form> {
-    const form = await this.prisma.form.findUnique({ where: { id: formId } });
-    if (!form) {
-      throw new NotFoundException(`Form with ID ${formId} not found`);
-    }
-    if (form.user_id !== userId) {
+    const form = await this.prisma.form.findUnique({
+      where: { id: formId },
+      include: { member: { select: { userId: true } } },
+    });
+    if (!form || form.member?.userId !== userId) {
       throw new NotFoundException(`Form with ID ${formId} not found`);
     }
     return this.prisma.form.update({
@@ -319,11 +330,11 @@ export class FormService {
   }
 
   async deleteForm(formId: string, userId: string): Promise<void> {
-    const form = await this.prisma.form.findUnique({ where: { id: formId } });
-    if (!form) {
-      throw new NotFoundException(`Form with ID ${formId} not found`);
-    }
-    if (form.user_id !== userId) {
+    const form = await this.prisma.form.findUnique({
+      where: { id: formId },
+      include: { member: { select: { userId: true } } },
+    });
+    if (!form || form.member?.userId !== userId) {
       throw new NotFoundException(`Form with ID ${formId} not found`);
     }
 
@@ -356,51 +367,42 @@ export class FormService {
       data: { status: 'completed', updated_at: new Date() },
     });
 
-    if (form.user_id) {
-      await this.linkFormToOrganizations(formId, form.user_id);
-    }
-
-    if (form.participantId) {
-      await this.linkFormToOrganizationsForParticipant(formId, form.participantId);
+    if (form.memberId) {
+      await this.linkFormToOrganization(formId, form.memberId);
     }
   }
 
-  private async linkFormToOrganizations(
+  private async linkFormToOrganization(
     formId: string,
-    userId: string,
+    memberId: string,
   ): Promise<void> {
-    const memberships = await this.prisma.organizationMembership.findMany({
-      where: { userId },
-      select: { organizationId: true },
+    const member = await this.prisma.organizationMember.findUnique({
+      where: { id: memberId },
+      select: { organizationId: true, userId: true },
     });
 
-    if (memberships.length === 0) return;
+    if (!member) return;
 
-    await this.prisma.formOrganization.createMany({
-      data: memberships.map((m) => ({
-        formId,
-        organizationId: m.organizationId,
-      })),
-      skipDuplicates: true,
-    });
-  }
+    if (member.userId) {
+      const allMemberships = await this.prisma.organizationMember.findMany({
+        where: { userId: member.userId },
+        select: { organizationId: true },
+      });
 
-  private async linkFormToOrganizationsForParticipant(
-    formId: string,
-    participantId: string,
-  ): Promise<void> {
-    const participant = await this.prisma.participant.findUnique({
-      where: { id: participantId },
-      select: { organizationId: true },
-    });
+      if (allMemberships.length === 0) return;
 
-    if (!participant) return;
+      await this.prisma.formOrganization.createMany({
+        data: allMemberships.map((m) => ({
+          formId,
+          organizationId: m.organizationId,
+        })),
+        skipDuplicates: true,
+      });
+      return;
+    }
 
     await this.prisma.formOrganization.create({
-      data: {
-        formId,
-        organizationId: participant.organizationId,
-      },
+      data: { formId, organizationId: member.organizationId },
     });
   }
 

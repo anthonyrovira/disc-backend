@@ -12,7 +12,6 @@ import {
   InvitationTargetStatus,
   InvitationStatus,
   OrganizationRole,
-  ParticipantStatus,
 } from '../../generated/prisma/client';
 import { PrismaService } from '@/common/prisma/prisma.service';
 import { EmailService } from '@/email';
@@ -51,7 +50,7 @@ export class InvitationsService {
     userId: string,
     dto: CreateInvitationDto,
   ): Promise<InvitationResponseDto> {
-    const membership = await this.prisma.organizationMembership.findUnique({
+    const member = await this.prisma.organizationMember.findUnique({
       where: {
         userId_organizationId: {
           userId,
@@ -61,9 +60,9 @@ export class InvitationsService {
     });
 
     if (
-      !membership ||
-      (membership.role !== OrganizationRole.OWNER &&
-        membership.role !== OrganizationRole.MANAGER)
+      !member ||
+      (member.role !== OrganizationRole.OWNER &&
+        member.role !== OrganizationRole.MANAGER)
     ) {
       throw new ForbiddenException(
         'You must be an OWNER or MANAGER of this organization to send invitations',
@@ -355,22 +354,22 @@ export class InvitationsService {
         },
       });
 
-      const participant = await tx.participant.create({
+      const member = await tx.organizationMember.create({
         data: {
           organizationId: invitation.organizationId,
           teamId: invitation.teamId,
           email: invitation.email,
           firstName: invitation.firstName,
           lastName: invitation.lastName,
-          status: isCandidate ? ParticipantStatus.CANDIDATE : ParticipantStatus.EMPLOYEE,
-          invitedByUserId: invitation.invitedByUserId,
+          role: isCandidate ? OrganizationRole.CANDIDATE : OrganizationRole.EMPLOYEE,
+          invitedById: invitation.invitedByUserId,
         },
       });
 
       const form = await tx.form.create({
         data: {
           name: 'disc_form',
-          participantId: participant.id,
+          memberId: member.id,
           status: 'in_progress',
           created_at: new Date(),
         },
@@ -450,9 +449,12 @@ export class InvitationsService {
         },
       });
 
-      await tx.organizationMembership.create({
+      const member = await tx.organizationMember.create({
         data: {
           userId: user.id,
+          email: invitation.email,
+          firstName: invitation.firstName,
+          lastName: invitation.lastName,
           organizationId: invitation.organizationId,
           teamId: invitation.teamId,
           role: OrganizationRole.MANAGER,
@@ -463,7 +465,7 @@ export class InvitationsService {
       const form = await tx.form.create({
         data: {
           name: 'disc_form',
-          user_id: user.id,
+          memberId: member.id,
           status: 'in_progress',
           created_at: new Date(),
         },

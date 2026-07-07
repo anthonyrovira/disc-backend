@@ -11,7 +11,7 @@ export class FormAccessGuard implements CanActivate {
 
     const form = await this.prisma.form.findUnique({ where: { id: formId } });
 
-    if (!form || (!form.user_id && !form.participantId)) {
+    if (!form || !form.memberId) {
       throw new NotFoundException(`Form with ID ${formId} not found`);
     }
 
