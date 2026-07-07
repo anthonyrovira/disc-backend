@@ -302,6 +302,23 @@ export class OrganizationsController {
     await this.orgService.deleteParticipant(participantId);
   }
 
+  @Post(':id/members/:memberId/promote')
+  @UseGuards(JwtGuard, OrganizationRolesGuard)
+  @OrgRoles(OrganizationRole.OWNER, OrganizationRole.MANAGER)
+  @ApiBearerAuth()
+  @ApiOkResponse({ description: 'Promotion invitation sent' })
+  @ApiOperation({ summary: 'Promote an EMPLOYEE member to MANAGER' })
+  @ApiParam({ name: 'id', description: 'Organization ID' })
+  @ApiParam({ name: 'memberId', description: 'OrganizationMember ID to promote' })
+  @HttpCode(HttpStatus.OK)
+  async promoteMember(
+    @Param('id') id: string,
+    @Param('memberId') memberId: string,
+  ): Promise<{ message: string }> {
+    await this.orgService.promoteMember(id, memberId);
+    return { message: 'Promotion invitation sent to the member' };
+  }
+
   @Get(':id/candidates')
   @UseGuards(JwtGuard, OrganizationRolesGuard)
   @OrgRoles(OrganizationRole.OWNER, OrganizationRole.MANAGER)

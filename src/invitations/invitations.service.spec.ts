@@ -355,5 +355,122 @@ describe('InvitationsService', () => {
       expect(result.accessToken).toBe('mock-token');
       expect(result.formId).toBe('f-id');
     });
+
+    it('should update existing member when memberId is set (promotion flow)', async () => {
+      prisma.invitation.findUnique.mockResolvedValue({
+        ...baseInvitation,
+        memberId: 'existing-member-id',
+      });
+      prisma.user.findUnique.mockResolvedValue(null);
+
+      const mockTx = {
+        user: { create: jest.fn().mockResolvedValue({ id: 'u-id', email: 'manager@acme.com' }) },
+        organizationMember: { update: jest.fn() },
+        form: {
+          create: jest.fn(),
+          findFirst: jest.fn().mockResolvedValue({ id: 'existing-form-id' }),
+        },
+        formQuestion: { createMany: jest.fn() },
+        invitation: { update: jest.fn().mockResolvedValue({}) },
+        question: { findMany: jest.fn() },
+      };
+
+      prisma.$transaction.mockImplementation(async (cb: any) => cb(mockTx));
+
+      const result = await service.setupPassword(validToken, 'password123');
+
+      expect(mockTx.organizationMember.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 'existing-member-id' },
+          data: expect.objectContaining({
+            role: OrganizationRole.MANAGER,
+            userId: 'u-id',
+          }),
+        }),
+      );
+      expect(mockTx.form.create).not.toHaveBeenCalled();
+      expect(mockTx.formQuestion.createMany).not.toHaveBeenCalled();
+      expect(result.accessToken).toBe('mock-token');
+      expect(result.formId).toBe('existing-form-id');
+    });
+
+    it('should create a new form if existing member has none (promotion edge case)', async () => {
+      prisma.invitation.findUnique.mockResolvedValue({
+        ...baseInvitation,
+        memberId: 'existing-member-id',
+      });
+      prisma.user.findUnique.mockResolvedValue(null);
+
+      const mockTx = {
+        user: { create: jest.fn().mockResolvedValue({ id: 'u-id', email: 'manager@acme.com' }) },
+        organizationMember: { update: jest.fn() },
+        form: {
+          create: jest.fn().mockResolvedValue({ id: 'new-form-id' }),
+          update: jest.fn(),
+          findFirst: jest.fn().mockResolvedValue(null),
+        },
+        formQuestion: { createMany: jest.fn() },
+        invitation: { update: jest.fn() },
+        question: { findMany: jest.fn().mockResolvedValue([{ id: 'q1' }]) },
+      };
+
+      prisma.$transaction.mockImplementation(async (cb: any) => cb(mockTx));
+
+      const result = await service.setupPassword(validToken, 'password123');
+
+      expect(mockTx.form.create).toHaveBeenCalled();
+      expect(result.formId).toBe('new-form-id');
+    });
+  });
+
+  describe('createPromotionInvitation', () => {
+    it('should create an invitation with memberId', async () => {
+      prisma.invitation.findFirst.mockResolvedValue(null);
+      prisma.invitation.create.mockResolvedValue({
+        id: 'inv-id',
+        email: 'emp@acme.com',
+        firstName: 'Emp',
+        lastName: null,
+        targetStatus: InvitationTargetStatus.MANAGER,
+        status: InvitationStatus.PENDING,
+        token: 'a'.repeat(64),
+        organizationId: 'org-id',
+        teamId: null,
+        invitedByUserId: 'owner-id',
+        memberId: 'member-id',
+        expiresAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
+        createdAt: new Date(),
+        organization: { name: 'Acme Corp' },
+        team: null,
+      });
+      prisma.user.findUnique.mockResolvedValue({ id: 'owner-id' });
+
+      await service.createPromotionInvitation('owner-id', 'member-id', {
+        email: 'emp@acme.com',
+        firstName: 'Emp',
+        organizationId: 'org-id',
+      });
+
+      expect(prisma.invitation.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            memberId: 'member-id',
+            targetStatus: InvitationTargetStatus.MANAGER,
+          }),
+        }),
+      );
+    });
+
+    it('should throw ConflictException if pending invitation exists', async () => {
+      prisma.invitation.findFirst.mockResolvedValue({ id: 'existing' });
+
+      await expect(
+        service.createPromotionInvitation('owner-id', 'member-id', {
+          email: 'emp@acme.com',
+          firstName: 'Emp',
+          organizationId: 'org-id',
+        }),
+      ).rejects.toThrow(ConflictException);
+    });
   });
 });

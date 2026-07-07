@@ -1,15 +1,14 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import {
   BadRequestException,
-  ConflictException,
   ForbiddenException,
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '@/common/prisma/prisma.service';
+import { InvitationsService } from '@/invitations/invitations.service';
 import { OrganizationsService } from './organizations.service';
 import {
   OrganizationRole,
-  OwnershipTransferStatus,
 } from '../../generated/prisma/client';
 
 describe('OrganizationsService', () => {
@@ -63,6 +62,10 @@ describe('OrganizationsService', () => {
       providers: [
         OrganizationsService,
         { provide: PrismaService, useValue: prisma },
+        {
+          provide: InvitationsService,
+          useValue: { createPromotionInvitation: jest.fn() },
+        },
       ],
     }).compile();
 
@@ -318,6 +321,45 @@ describe('OrganizationsService', () => {
 
       const result = await service.getCandidates('org-id');
       expect(result).toEqual([]);
+    });
+  });
+
+  describe('promoteMember', () => {
+    it('should throw NotFoundException if member not found', async () => {
+      prisma.organizationMember.findFirst.mockResolvedValue(null);
+
+      await expect(
+        service.promoteMember('org-id', 'member-id'),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should create a promotion invitation for valid EMPLOYEE', async () => {
+      prisma.organizationMember.findFirst.mockResolvedValue({
+        id: 'member-id',
+        organizationId: 'org-id',
+        email: 'emp@acme.com',
+        firstName: 'Emp',
+        lastName: null,
+        role: OrganizationRole.EMPLOYEE,
+        userId: null,
+        teamId: null,
+        invitedById: 'owner-id',
+      });
+
+      await service.promoteMember('org-id', 'member-id');
+
+      const invitationsService = (service as any).invitationsService;
+      expect(invitationsService.createPromotionInvitation).toHaveBeenCalledWith(
+        'owner-id',
+        'member-id',
+        {
+          email: 'emp@acme.com',
+          firstName: 'Emp',
+          lastName: undefined,
+          organizationId: 'org-id',
+          teamId: undefined,
+        },
+      );
     });
   });
 });

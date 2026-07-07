@@ -10,6 +10,7 @@ import {
   OrganizationRole,
   OwnershipTransferStatus,
 } from '../../generated/prisma/client';
+import { InvitationsService } from '@/invitations/invitations.service';
 import { PendingTransferDto } from './dto/organizations.dto';
 import { PrismaService } from '@/common/prisma/prisma.service';
 import {
@@ -29,7 +30,10 @@ import {
 export class OrganizationsService {
   private readonly logger = new Logger(OrganizationsService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly invitationsService: InvitationsService,
+  ) {}
 
   async create(
     userId: string,
@@ -696,6 +700,35 @@ export class OrganizationsService {
 
   async getCandidates(organizationId: string): Promise<ParticipantResponseDto[]> {
     return this.getParticipants(organizationId, 'CANDIDATE');
+  }
+
+  async promoteMember(organizationId: string, memberId: string): Promise<void> {
+    const member = await this.prisma.organizationMember.findFirst({
+      where: {
+        id: memberId,
+        organizationId,
+        role: OrganizationRole.EMPLOYEE,
+        userId: null,
+      },
+    });
+
+    if (!member) {
+      throw new NotFoundException(
+        'EMPLOYEE member not found or already has a user account',
+      );
+    }
+
+    await this.invitationsService.createPromotionInvitation(
+      member.invitedById ?? organizationId,
+      memberId,
+      {
+        email: member.email,
+        firstName: member.firstName,
+        lastName: member.lastName ?? undefined,
+        organizationId,
+        teamId: member.teamId ?? undefined,
+      },
+    );
   }
 
   // ---- Simulation ----
