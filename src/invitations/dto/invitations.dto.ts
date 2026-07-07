@@ -62,6 +62,20 @@ export class CreateInvitationDto {
   @IsOptional()
   @IsUUID('all', { message: "L'identifiant de l'équipe doit être un UUID valide" })
   teamId?: string;
+
+  /**
+   * Optional existing OrganizationMember ID.
+   * When set, the invitation is linked to an existing member
+   * (e.g., promoting an EMPLOYEE to MANAGER) so that on
+   * setup-password the member is updated rather than created.
+   */
+  @ApiPropertyOptional({
+    description: 'Existing OrganizationMember ID (for promotion flow)',
+    example: 'f8e8d1e0-7e6e-11ea-bc55-0242ac130003',
+  })
+  @IsOptional()
+  @IsUUID('all', { message: "L'identifiant du membre doit être un UUID valide" })
+  memberId?: string;
 }
 
 export class InvitationResponseDto {
